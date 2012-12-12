@@ -1,0 +1,23 @@
+Mrxvt.xft: 1
+Mrxvt.xftFont: Monospace
+Mrxvt.xftSize: 10
+Mrxvt.xftRGBA: rgb
+Mrxvt.xftAntialias: 1
+Mrxvt.xftHinting:   1
+Mrxvt.xftAutoHint:  1
+Mrxvt.xftGlobalAdvance: 1
+
+Mrxvt.background: black
+Mrxvt.foreground: gray
+
+Mrxvt.scrollBar: 0
+Mrxvt.scrollbarRight: 1
+Mrxvt.autohideTabbar: 1
+
+# setup it after mrxvt.terminfo installation
+Mrxvt.termName: xterm-256color
+
+Mrxvt.tabBackground: black
+Mrxvt.tabForeground: gray
+Mrxvt.itabForeground: gray 
+Mrxvt.itabBackground: black
