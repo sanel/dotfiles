@@ -1,31 +1,35 @@
 ;(defvar *emacs-load-start* (current-time))
 
 ;; basic stuff
+(setq inhibit-splash-screen t)
 (set-background-color "black")
 (set-foreground-color "gray")
 (set-cursor-color "green")
 (set-face-background 'modeline "black")
 (set-face-foreground 'modeline "gray")
-(setq inhibit-splash-screen t)
 
 ;; bold fonts slows things a shit
 (set-face-bold-p 'bold nil)
 ;; disable italics
 (set-face-italic-p 'italic nil)
 
+;; in case 'emacsclient -c' was called
+(add-to-list 'default-frame-alist '(foreground-color . "gray"))
+(add-to-list 'default-frame-alist '(background-color . "black"))
+(add-to-list 'default-frame-alist '(cursor-color . "green"))
+
+(set-default-font "Monospace-10")
+(add-to-list 'default-frame-alist '(font . "Monospace-10"))
+
+(setq bidi-display-reordering nil)
 (setq font-lock-support-mode 'jit-lock-mode)
 (setq jit-lock-stealth-time 16
 	  jit-lock-defer-contextually t
 	  jit-lock-stealth-nice 0.5)
 (setq-default font-lock-multiline t)
 
-(setq bidi-display-reordering nil)
-
-;; in case 'emacsclient -c' was called
-(add-to-list 'default-frame-alist '(foreground-color . "gray"))
-(add-to-list 'default-frame-alist '(background-color . "black"))
-(add-to-list 'default-frame-alist '(cursor-color . "green"))
-(add-to-list 'default-frame-alist '(font . "Monospace-10"))
+(setq font-lock-maximum-decoration
+	  '((c-mode . 2) (c++-mode . 2) (t . 1)))
 
 (setq-default c-basic-offset 4
 			  c-default-style "linux"
@@ -36,8 +40,6 @@
 			  ;show-trailing-whitespace t
 			  )
 
-(set-default-font "Monospace-10")
-
 (tool-bar-mode -1)
 (tooltip-mode  -1)
 (menu-bar-mode -1)
@@ -46,6 +48,8 @@
 
 ;; text width
 (setq-default fill-collumn 72)
+;; apply fill-collumn width in text-mode
+(add-hook 'text-mode-hook #'turn-on-auto-fill)
 
 ;; no backup and autosave
 (setq backup-inhibited t
@@ -123,21 +127,28 @@
 (add-to-list 'auto-mode-alist '("Jamfile" . jam-mode))
 (add-to-list 'auto-mode-alist '("Jamrules" . jam-mode))
 
-;; eclim
+;; company
+;(add-to-list 'load-path "~/.emacs.d/company-mode")
+;
+;;; eclim
 ;(add-to-list 'load-path "~/.emacs.d/emacs-eclim")
 ;(add-to-list 'load-path "~/.emacs.d/emacs-eclim/vendor")
 ;
-;(setq eclim-auto-save t
-;	  eclim-executable "~/programs/eclipse/eclim"
-;	  eclimd-executable "~/programs/eclipse/eclimd")
+;(setq eclim-eclipse-dirs '("~/programs/eclipse")
+;      eclim-executable "~/programs/eclipse/eclim")
+;
+;(require 'eclim)
 ;
 ;(add-hook 'eclim-mode-hook
 ;  (lambda ()
 ;	(global-set-key (kbd "C-n") 'eclim-complete)))
 ;
-;(require 'eclim)
 ;(global-eclim-mode)
-
+;
+;(require 'company)
+;(require 'company-emacs-eclim)
+;(company-emacs-eclim-setup)
+;(global-company-mode t)
 
 ;; stolent from: http://www.credmp.org/?p=27
 ;(require 'url)
@@ -208,6 +219,32 @@
   (interactive)
   (yank)
   (call-interactively 'indent-region))
+
+(defun cpp-highlight-if-0/1 ()
+  "Modify the face of text in between #if 0 ... #endif."
+  (interactive)
+  (setq cpp-known-face '(foreground-color . "chocolate"))
+  (setq cpp-unknown-face 'default)
+  (setq cpp-face-type 'dark)
+  (setq cpp-known-writable 't)
+  (setq cpp-unknown-writable 't)
+  (setq cpp-edit-list
+		'((#("0" 0 1 (fontified nil))
+		   (foreground-color . "chocolate")
+		   nil
+		   both nil)))
+  (cpp-highlight-buffer t))
+
+(defun warning-keywords ()
+  "Highlight warning keywords."
+  (font-lock-add-keywords nil '(("\\<\\(FIXME\\):" 1 font-lock-warning-face t)
+                                ("\\<\\(TODO\\):" 1 font-lock-warning-face t))))
+
+(add-hook 'c-mode-common-hook 'warning-keywords)
+(add-hook 'c-mode-common-hook
+  (lambda ()
+	(cpp-highlight-if-0/1)
+	(add-hook 'after-save-hook 'cpp-highlight-if-0/1 'append 'local)))
 
 (global-set-key (kbd "<S-prior>") 'previous-user-buffer)
 (global-set-key (kbd "<S-next>") 'next-user-buffer)
