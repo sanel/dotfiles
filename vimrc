@@ -1,4 +1,3 @@
-" An example for a vimrc file.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
 " Last change:	2008 Dec 17
@@ -29,15 +28,9 @@ set incsearch		" do incremental searching
 set ts=4
 set sw=4
 
+"let g:lisp_rainbow=1
 let loaded_matchparen = 0
 set sm
-
-"let g:slimv_swank_cmd = '! xterm -e ~/programs/sbcl-1.0.57-x86-linux/run-sbcl.sh --load ~/.vim/slime/start-swank.lisp &' 
-let g:paredit_loaded = 0
-let g:slimv_swank_cmd = '! xterm -e /opt/ecl/bin/ecl -load ~/.vim/slime/start-swank.lisp &' 
-"let g:slimv_swank_clojure = '! xterm -e lein swank &' 
-
-"let g:lisp_rainbow=1
 
 " For Win32 GUI: remove 't' flag from 'guioptions': no tearoff menu entries
 " let &guioptions = substitute(&guioptions, "t", "", "g")
@@ -108,3 +101,7 @@ highligh Comment ctermfg=DarkRed
 :noremap <F11> :BufExplorer<Enter>
 :noremap <F12> :shell<Enter>
 :colorscheme sweyla
+
+let g:paredit_mode=0
+let g:slimv_swank_clojure = '! xterm -e lein swank &'
+let g:slimv_swank_cmd = '! xterm -e /opt/ecl/bin/ecl -load ~/.vim/slime/start-swank.lisp &' 
