@@ -28,6 +28,7 @@
 	  jit-lock-stealth-nice 0.5)
 (setq-default font-lock-multiline t)
 
+;; speeds up things considerably
 (setq font-lock-maximum-decoration
 	  '((c-mode . 2) (c++-mode . 2) (t . 1)))
 
@@ -86,7 +87,8 @@
 (require 'evil)
 (evil-mode 1)
 
-;(require 'etags-select)
+;; load tags and evil will adjust 'g]' for etags-select menu selection
+(require 'etags-select)
 
 ;; fullscreen support
 (defun fullscreen ()

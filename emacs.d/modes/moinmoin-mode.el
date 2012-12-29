@@ -579,9 +579,7 @@ different go to the beginning of the line first."
   (toggle-truncate-lines 0)                    ; do not truncate
   ;(screen-lines-mode 1)                        ; use screen lines
   (moinmoin-setup-font-lock)
-  (abbrev-mode 1)
-  (set-fill-column 65000)
-  (auto-fill-mode 0))
+  (abbrev-mode 1))
 
 (add-to-list 'auto-mode-alist '("\\.wiki$" . moinmoin-mode))
 
