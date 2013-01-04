@@ -1,0 +1,11 @@
+escape ^pp
+caption always "%{gk}host: (%{yk}%H%{gk}) | %{= kc}%?%-Lw%?%{= kY}%n*%f %t%?(%u)%?%{= kc}%?%+Lw%?"
+
+# Alt + left
+bindkey ^[[1;3D prev
+
+# Alt + right
+bindkey ^[[1;3C next
+
+term screen-256color
+maptimeout 100
