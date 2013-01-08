@@ -230,6 +230,7 @@
   (setq cpp-face-type 'dark)
   (setq cpp-known-writable 't)
   (setq cpp-unknown-writable 't)
+
   (setq cpp-edit-list
 		'((#("0" 0 1 (fontified nil))
 		   (foreground-color . "chocolate")
@@ -252,6 +253,12 @@
 (global-set-key (kbd "<S-next>") 'next-user-buffer)
 (global-set-key [f11] 'ibuffer)
 (global-set-key [f12] 'eshell)
+
+;; force TAB on Shift-Tab
+(global-set-key (kbd "<backtab>") (lambda () (interactive) (insert-char 9 1)))
+
+;(add-to-list 'load-path "~/.emacs.d/magit")
+;(require 'magit)
 
 ;; slime
 ;(add-to-list 'load-path "~/.emacs.d/slime/")
