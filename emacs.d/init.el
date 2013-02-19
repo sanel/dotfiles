@@ -41,11 +41,11 @@
 			  ;show-trailing-whitespace t
 			  )
 
-(tool-bar-mode -1)
-(tooltip-mode  -1)
+;(tool-bar-mode -1)
+;(tooltip-mode  -1)
 (menu-bar-mode -1)
 (blink-cursor-mode -1)
-(set-scroll-bar-mode 'right)
+;(set-scroll-bar-mode 'right)
 
 ;; text width
 (setq-default fill-collumn 72)
@@ -169,31 +169,6 @@
 ;(autoload 'babel-buffer "babel"
 ;   "Use a web translation service to translate the current buffer." t)
 
-;; newsticker
-;(require 'htmlr)
-;(require 'newsticker)
-;
-
-;(setq newsticker-display-interval    15.3
-;	  newsticker-keep-obsolete-items nil
-;	  newsticker-scroll-smoothly     nil
-;	  newsticker-use-full-width      nil
-;	  newsticker-html-renderer       'htmlr
-;	  newsticker-sort-method         'sort-by-time)
-;
-;(setq newsticker-url-list-defaults
-;	  '(("Emacs Wiki" "http://www.emacswiki.org/cgi-bin/wiki.pl?action=rss" nil 3600)
-;		("Slashdot" "http://slashdot.org/slashdot.rss" nil 3600)
-;		("Hacker News" "http://news.ycombinator.com/rss" nil 3600)
-;		("Reddit Programming" "http://www.reddit.com/r/programming/.rss" nil 3600)
-;		("Reddit Scheme" "http://www.reddit.com/r/scheme/.rss" nil 3600)
-;		("Reddit Lisp" "http://www.reddit.com/r/lisp/.rss" nil 3600)
-;		("Freshmeat" "http://freecode.com/?format=atom" nil 3600)
-;		("Planet Clojure" "http://planet.clojure.in/atom.xml" nil 3600)
-;		("Planet Gnome" "http://planet.gnome.org/atom.xml" nil 3600)
-;		("Hackful Europe" "http://hackful.com/frontpage.rss" nil 3600)
-;		("Clojure Google Group" "http://groups.google.com/group/clojure/feed/rss_v2_0_msgs.xml" nil 3600)))
-;
 ;; org mode
 (setq org-log-done 'time)
 
