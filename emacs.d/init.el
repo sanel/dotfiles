@@ -1,5 +1,9 @@
 ;(defvar *emacs-load-start* (current-time))
 
+;; used by rxvt-like terminals; with this env, emacs in terminal
+;; will correctly know how to use default colors
+(setenv "COLORFGBG" "default;default;0")
+
 ;; basic stuff
 (setq inhibit-splash-screen t)
 (set-background-color "black")
