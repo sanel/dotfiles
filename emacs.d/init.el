@@ -133,29 +133,6 @@
 (add-to-list 'auto-mode-alist '("Jamfile" . jam-mode))
 (add-to-list 'auto-mode-alist '("Jamrules" . jam-mode))
 
-;; company
-;(add-to-list 'load-path "~/.emacs.d/company-mode")
-;
-;;; eclim
-;(add-to-list 'load-path "~/.emacs.d/emacs-eclim")
-;(add-to-list 'load-path "~/.emacs.d/emacs-eclim/vendor")
-;
-;(setq eclim-eclipse-dirs '("~/programs/eclipse")
-;      eclim-executable "~/programs/eclipse/eclim")
-;
-;(require 'eclim)
-;
-;(add-hook 'eclim-mode-hook
-;  (lambda ()
-;	(global-set-key (kbd "C-n") 'eclim-complete)))
-;
-;(global-eclim-mode)
-;
-;(require 'company)
-;(require 'company-emacs-eclim)
-;(company-emacs-eclim-setup)
-;(global-company-mode t)
-
 ;; stolent from: http://www.credmp.org/?p=27
 ;(require 'url)
 ;(defun google-it (term)
@@ -175,6 +152,16 @@
 
 ;; org mode
 (setq org-log-done 'time)
+
+;; hide modeline
+(defun toggle-mode-line ()
+  "toggles the modeline on and off"
+  (interactive)
+  (setq mode-line-format
+		(if (equal mode-line-format nil)
+			(default-value 'mode-line-format)) )
+  (redraw-display))
+
 
 ;;; buffer management
 (defun next-user-buffer ()
@@ -233,8 +220,16 @@
 (global-set-key [f11] 'ibuffer)
 (global-set-key [f12] 'eshell)
 
+;; Alt-F12
+(global-set-key (kbd "<f60>") 'toggle-mode-line)
+
 ;; force TAB on Shift-Tab
 (global-set-key (kbd "<backtab>") (lambda () (interactive) (insert-char 9 1)))
+
+(setq initial-frame-alist (append '((minibuffer . nil)) initial-frame-alist))
+(setq default-frame-alist (append '((minibuffer . nil)) default-frame-alist))
+(setq minibuffer-auto-raise t)
+(setq minibuffer-exit-hook '(lambda () (lower-frame)))
 
 ;(add-to-list 'load-path "~/.emacs.d/magit")
 ;(require 'magit)
