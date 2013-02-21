@@ -221,7 +221,7 @@
 (global-set-key [f12] 'eshell)
 
 ;; Alt-F12
-(global-set-key (kbd "<f60>") 'toggle-mode-line)
+(global-set-key (kbd "<f9>") 'toggle-mode-line)
 
 ;; force TAB on Shift-Tab
 (global-set-key (kbd "<backtab>") (lambda () (interactive) (insert-char 9 1)))
