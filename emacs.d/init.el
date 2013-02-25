@@ -8,10 +8,19 @@
 (setq inhibit-splash-screen t)
 (set-background-color "black")
 (set-foreground-color "gray")
-(set-cursor-color "green")
+(set-cursor-color "gray")
 (set-face-background 'modeline "black")
 (set-face-foreground 'modeline "gray")
-
+(set-face-foreground 'font-lock-comment-face "#FF7B11")
+(set-face-foreground 'font-lock-constant-face "#92AFCE")
+(set-face-foreground 'font-lock-builtin-face "#FE8592")
+(set-face-foreground 'font-lock-function-name-face "#B3FF79")
+(set-face-foreground 'font-lock-variable-name-face "#95E275")
+(set-face-foreground 'font-lock-keyword-face "#8EFFC7")
+(set-face-foreground 'font-lock-string-face "#60FFA6")
+(set-face-foreground 'font-lock-doc-face "#FFD86A")
+(set-face-foreground 'font-lock-type-face "#EDFF5F")
+ 
 ;; bold fonts slows things a shit
 (set-face-bold-p 'bold nil)
 ;; disable italics
@@ -20,7 +29,7 @@
 ;; in case 'emacsclient -c' was called
 (add-to-list 'default-frame-alist '(foreground-color . "gray"))
 (add-to-list 'default-frame-alist '(background-color . "black"))
-(add-to-list 'default-frame-alist '(cursor-color . "green"))
+(add-to-list 'default-frame-alist '(cursor-color . "gray"))
 
 (set-default-font "Monospace-10")
 (add-to-list 'default-frame-alist '(font . "Monospace-10"))
@@ -45,11 +54,13 @@
 			  ;show-trailing-whitespace t
 			  )
 
-;(tool-bar-mode -1)
-;(tooltip-mode  -1)
+(when window-system
+  (tool-bar-mode -1)
+  (tooltip-mode  -1)
+  (set-scroll-bar-mode 'right))
+
 (menu-bar-mode -1)
 (blink-cursor-mode -1)
-;(set-scroll-bar-mode 'right)
 
 ;; text width
 (setq-default fill-collumn 72)
@@ -58,10 +69,9 @@
 
 ;; no backup and autosave
 (setq backup-inhibited t
-      auto-save-default nil)
-
-;; scrolling
-(setq scroll-step 1
+      auto-save-default nil
+	  ;; scrolling
+	  scroll-step 1
 	  scroll-conservatively 2000)
 
 ;; allow buffer erasing
@@ -95,11 +105,11 @@
 (require 'etags-select)
 
 ;; fullscreen support
-(defun fullscreen ()
-  (interactive)
-  (x-send-client-message nil 0 nil "_NET_WM_STATE" 32
-						 '(2 "_NET_WM_STATE_FULLSCREEN" 0)))
-
+(if window-system
+	(defun fullscreen ()
+	  (interactive)
+	  (x-send-client-message nil 0 nil "_NET_WM_STATE" 32
+							 '(2 "_NET_WM_STATE_FULLSCREEN" 0)))
 ;; dired addon
 (require 'dired-details)
 (dired-details-install)
@@ -112,7 +122,6 @@
 (autoload 'clojure-mode "clojure-mode.el"
   "Major mode for editing cloure files" t)
 
-;; clojure stuff
 (add-to-list 'auto-mode-alist '("\\.clj" . clojure-mode))
 (add-to-list 'auto-mode-alist '("\\.cljs" . clojure-mode))
 
@@ -162,7 +171,6 @@
 			(default-value 'mode-line-format)) )
   (redraw-display))
 
-
 ;;; buffer management
 (defun next-user-buffer ()
   "Switch to the next user buffer. User buffers are those whose name does not start with *."
@@ -191,11 +199,11 @@
 (defun cpp-highlight-if-0/1 ()
   "Modify the face of text in between #if 0 ... #endif."
   (interactive)
-  (setq cpp-known-face '(foreground-color . "chocolate"))
-  (setq cpp-unknown-face 'default)
-  (setq cpp-face-type 'dark)
-  (setq cpp-known-writable 't)
-  (setq cpp-unknown-writable 't)
+  (setq cpp-known-face '(foreground-color . "chocolate")
+		cpp-unknown-face 'default
+		cpp-face-type 'dark
+		cpp-known-writable 't
+		cpp-unknown-writable 't)
 
   (setq cpp-edit-list
 		'((#("0" 0 1 (fontified nil))
@@ -220,19 +228,8 @@
 (global-set-key [f11] 'ibuffer)
 (global-set-key [f12] 'eshell)
 
-;; Alt-F12
-(global-set-key (kbd "<f9>") 'toggle-mode-line)
-
 ;; force TAB on Shift-Tab
 (global-set-key (kbd "<backtab>") (lambda () (interactive) (insert-char 9 1)))
-
-(setq initial-frame-alist (append '((minibuffer . nil)) initial-frame-alist))
-(setq default-frame-alist (append '((minibuffer . nil)) default-frame-alist))
-(setq minibuffer-auto-raise t)
-(setq minibuffer-exit-hook '(lambda () (lower-frame)))
-
-;(add-to-list 'load-path "~/.emacs.d/magit")
-;(require 'magit)
 
 ;; slime
 ;(add-to-list 'load-path "~/.emacs.d/slime/")
