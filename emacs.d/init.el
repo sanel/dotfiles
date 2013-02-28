@@ -80,6 +80,9 @@
 ;; no vc
 (setq vc-handled-backends nil)
 
+;; tramp
+(setq password-cache-expiry nil)
+
 ;; viper
 ;(setq viper-mode t)
 ;(setq viper-inhibit-startup-message t)
@@ -113,6 +116,9 @@
 ;; dired addon
 (require 'dired-details)
 (dired-details-install)
+
+;; on 'a' do not ask me about creating new buffer
+(put 'dired-find-alternate-file 'disabled nil)
 
 (autoload 'markdown-mode "markdown-mode.el"
   "Major mode for editing Markdown files" t)
