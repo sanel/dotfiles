@@ -1,6 +1,6 @@
 (defface paren-face
   '((((class color) (background dark))
-	 (:foreground "grey20"))
+	 (:foreground "brightblack"))
 	(((class color) (background light))
 	 (:foreground "grey80")))
   "Face used to dim parentheses.")
