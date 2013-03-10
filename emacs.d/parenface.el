@@ -5,7 +5,8 @@
 	 (:foreground "grey80")))
   "Face used to dim parentheses.")
 
-(add-hook 'emacs-lisp-mode-hook
-		  (lambda ()
-			(font-lock-add-keywords nil
-									'(("(\\|)" . 'paren-face)))))
+(dolist (i '(emacs-lisp-mode-hook lisp-mode-hook scheme-mode-hook))
+  (add-hook i
+	(lambda ()
+	  (font-lock-add-keywords nil
+							  '(("(\\|)\\|\\[\\|\\]" . 'paren-face))))))
