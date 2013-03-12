@@ -104,6 +104,8 @@
 (require 'evil)
 (evil-mode 1)
 
+(evil-ex-define-cmd "bdp" 'kill-buffer)
+
 ;; load tags and evil will adjust 'g]' for etags-select menu selection
 (require 'etags-select)
 
@@ -238,8 +240,8 @@
 (global-set-key (kbd "<backtab>") (lambda () (interactive) (insert-char 9 1)))
 
 ;; slime
-;(add-to-list 'load-path "~/.emacs.d/slime/")
-;(setq inferior-lisp-program "/opt/ecl/bin/ecl")
+(add-to-list 'load-path "~/.emacs.d/slime/")
+(setq inferior-lisp-program "~/programs/sbcl/run-sbcl.sh")
 ;(require 'slime)
 ;(slime-setup)
 
