@@ -10,6 +10,7 @@
 (set-foreground-color "gray")
 (set-cursor-color "gray")
 (set-face-background 'modeline "black")
+(set-face-background 'modeline-inactive "gray10")
 (set-face-foreground 'modeline "gray")
 (set-face-foreground 'font-lock-comment-face "#FF7B11")
 (set-face-foreground 'font-lock-constant-face "#92AFCE")
