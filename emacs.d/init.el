@@ -246,6 +246,19 @@
 ;(require 'slime)
 ;(slime-setup)
 
+;; something I can quickly call from eshell
+(defun E (&rest args)
+  "Invoke `find-file' on the file. \"vi +42 foo\" also goes to line 42 in the buffer."
+  (while args
+	(if (string-match "\\`\\+\\([0-9]+\\)\\'" (car args))
+		(let* ((line (string-to-number (match-string 1 (pop args))))
+			   (file (pop args)))
+		  (find-file file)
+		  (goto-line line))
+	  (find-file (pop args)))))
+
+(setenv "EDITOR" "E")
+
 ;(message ".emacs loaded in %ds"
 ;		 (destructuring-bind (hi lo ms) (current-time)
 ;		   (-
