@@ -1,4 +1,4 @@
-;(defvar *emacs-load-start* (current-time))
+(defvar *emacs-load-start* (current-time))
 
 ;; used by rxvt-like terminals; with this env, emacs in terminal
 ;; will correctly know how to use default colors
@@ -22,7 +22,7 @@
 (set-face-foreground 'font-lock-doc-face "#FFD86A")
 (set-face-foreground 'font-lock-type-face "#EDFF5F")
  
-;; bold fonts slows things a shit
+; bold fonts slows things a shit
 (set-face-bold-p 'bold nil)
 ;; disable italics
 (set-face-italic-p 'italic nil)
@@ -84,7 +84,7 @@
 ;; tramp
 (setq password-cache-expiry nil)
 
-;; viper
+;; Viper
 ;(setq viper-mode t)
 ;(setq viper-inhibit-startup-message t)
 ;(setq viper-expert-level '3)
@@ -107,8 +107,11 @@
 
 (evil-ex-define-cmd "bdp" 'kill-buffer)
 
-;; load tags and evil will adjust 'g]' for etags-select menu selection
-(require 'etags-select)
+;; A small adjustment so we autoload etags-select.el only when this
+;; sequence was pressed. Evil already predefines 'g]' to be set, but only
+;; after etags-select.el was loaded...
+(define-key evil-motion-state-map "g]" 'etags-select-find-tag-at-point)
+(autoload 'etags-select-find-tag-at-point "etags-select")
 
 ;; fullscreen support
 (if window-system
@@ -117,11 +120,12 @@
 	  (x-send-client-message nil 0 nil "_NET_WM_STATE" 32
 							 '(2 "_NET_WM_STATE_FULLSCREEN" 0))))
 ;; dired addon
-(require 'dired-details)
-(dired-details-install)
-
-;; on 'a' do not ask me about creating new buffer
-(put 'dired-find-alternate-file 'disabled nil)
+(add-hook 'dired-mode-hook
+  (lambda ()
+	(require 'dired-details)
+	(dired-details-install)
+	;; on 'a' do not ask me about creating new buffer
+	(put 'dired-find-alternate-file 'disabled nil)))
 
 (autoload 'markdown-mode "markdown-mode.el"
   "Major mode for editing Markdown files" t)
@@ -142,7 +146,7 @@
   (lambda ()
 	;(require 'rainbow-delimiters)
 	(global-set-key (kbd "C-c C-c") 'lisp-eval-defun)
-	(setq inferior-lisp-program "/usr/local/bin/lein repl") ))
+	(setq inferior-lisp-program "/usr/local/bin/lein repl")))
 
 (autoload 'jam-mode "jam-mode.el"
   "Major more for editing jam files" t)
@@ -226,9 +230,9 @@
   (font-lock-add-keywords nil '(("\\<\\(FIXME\\):" 1 font-lock-warning-face t)
                                 ("\\<\\(TODO\\):" 1 font-lock-warning-face t))))
 
-(add-hook 'c-mode-common-hook 'warning-keywords)
 (add-hook 'c-mode-common-hook
   (lambda ()
+	(warning-keywords)
 	(cpp-highlight-if-0/1)
 	(add-hook 'after-save-hook 'cpp-highlight-if-0/1 'append 'local)))
 
@@ -241,10 +245,13 @@
 (global-set-key (kbd "<backtab>") (lambda () (interactive) (insert-char 9 1)))
 
 ;; slime
-(add-to-list 'load-path "~/.emacs.d/slime/")
-(setq inferior-lisp-program "~/programs/sbcl/run-sbcl.sh")
-;(require 'slime)
-;(slime-setup)
+(add-hook 'lisp-mode-hook
+  (lambda ()
+	(add-to-list 'load-path "~/.emacs.d/slime/")
+	(setq inferior-lisp-program "~/programs/sbcl/run-sbcl.sh")
+	;(require 'slime)
+	;(slime-setup)
+	))
 
 ;; something I can quickly call from eshell
 (defun E (&rest args)
@@ -259,12 +266,13 @@
 
 (setenv "EDITOR" "E")
 
-;(message ".emacs loaded in %ds"
-;		 (destructuring-bind (hi lo ms) (current-time)
-;		   (-
-;			 (+ hi lo)
-;			 (+ (first *emacs-load-start*)
-;				(second *emacs-load-start*) ))))
+(message ".emacs loaded in %ds"
+		 (destructuring-bind (hi lo ms) (current-time)
+		   (-
+			 (+ hi lo)
+			 (+ (first *emacs-load-start*)
+				(second *emacs-load-start*)))))
+
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
