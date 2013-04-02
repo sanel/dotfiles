@@ -184,25 +184,6 @@
 			(default-value 'mode-line-format)) )
   (redraw-display))
 
-;;; buffer management
-(defun next-user-buffer ()
-  "Switch to the next user buffer. User buffers are those whose name does not start with *."
-  (interactive)
-  (next-buffer)
-  (let ((i 0))
-	(while (and (string-match "^*" (buffer-name))
-				(< i 50))
-	  (setq i (1+ i)) (next-buffer) )))
-
-(defun previous-user-buffer ()
-  "Switch to the previous user buffer. User buffers are those whose name does not start with *."
-  (interactive)
-  (previous-buffer)
-  (let ((i 0))
-	(while (and (string-match "^*" (buffer-name))
-				(< i 50))
-	  (setq i (1+ i)) (previous-buffer) )))
-
 (defun paste-and-indent ()
   "Paste text and do indent on it."
   (interactive)
@@ -227,8 +208,7 @@
 
 (defun warning-keywords ()
   "Highlight warning keywords."
-  (font-lock-add-keywords nil '(("\\<\\(FIXME\\):" 1 font-lock-warning-face t)
-                                ("\\<\\(TODO\\):" 1 font-lock-warning-face t))))
+  (font-lock-add-keywords nil '(("\\<\\(FIXME\\|TODO\\|BUG\\):" 1 font-lock-warning-face t))))
 
 (add-hook 'c-mode-common-hook
   (lambda ()
@@ -236,8 +216,8 @@
 	(cpp-highlight-if-0/1)
 	(add-hook 'after-save-hook 'cpp-highlight-if-0/1 'append 'local)))
 
-(global-set-key (kbd "<S-prior>") 'previous-user-buffer)
-(global-set-key (kbd "<S-next>") 'next-user-buffer)
+(global-set-key (kbd "<S-prior>") 'previous-buffer)
+(global-set-key (kbd "<S-next>") 'next-buffer)
 (global-set-key [f11] 'ibuffer)
 (global-set-key [f12] 'eshell)
 
