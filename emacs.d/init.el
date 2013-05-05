@@ -1,4 +1,4 @@
-(defvar *emacs-load-start* (current-time))
+;(defvar *emacs-load-start* (current-time))
 
 ;; used by rxvt-like terminals; with this env, emacs in terminal
 ;; will correctly know how to use default colors
@@ -9,9 +9,18 @@
 (set-background-color "black")
 (set-foreground-color "gray")
 (set-cursor-color "gray")
-(set-face-background 'modeline "black")
-(set-face-background 'modeline-inactive "gray10")
-(set-face-foreground 'modeline "gray")
+
+(if (and (>= emacs-major-version 24)
+		 (>= emacs-minor-version 3))
+  (progn
+	(set-face-background 'mode-line "black")
+	(set-face-background 'mode-line-inactive "gray10")
+	(set-face-foreground 'mode-line "gray"))
+  (progn
+	(set-face-background 'modeline "black")
+	(set-face-background 'modeline-inactive "gray10")
+	(set-face-foreground 'modeline "gray")))
+
 (set-face-foreground 'font-lock-comment-face "#FF7B11")
 (set-face-foreground 'font-lock-constant-face "#92AFCE")
 (set-face-foreground 'font-lock-builtin-face "#FE8592")
@@ -246,12 +255,12 @@
 
 (setenv "EDITOR" "E")
 
-(message ".emacs loaded in %ds"
-		 (destructuring-bind (hi lo ms) (current-time)
-		   (-
-			 (+ hi lo)
-			 (+ (first *emacs-load-start*)
-				(second *emacs-load-start*)))))
+;(message ".emacs loaded in %ds"
+;		 (destructuring-bind (hi lo ms) (current-time)
+;		   (-
+;			 (+ hi lo)
+;			 (+ (first *emacs-load-start*)
+;				(second *emacs-load-start*)))))
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
