@@ -6,6 +6,8 @@ Mrxvt.xftAntialias: 1
 Mrxvt.xftHinting:   1
 Mrxvt.xftAutoHint:  1
 Mrxvt.xftGlobalAdvance: 1
+Mrxvt.bottomTabbar: 0
+Mrxvt.cursorBlink: 0
 
 Mrxvt.background: black
 Mrxvt.foreground: gray
