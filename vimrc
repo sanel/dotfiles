@@ -96,12 +96,16 @@ if !exists(":DiffOrig")
 		  \ | wincmd p | diffthis
 endif
 
-highligh Comment ctermfg=DarkRed
+highlight Comment ctermfg=DarkRed
 
-:noremap <F11> :BufExplorer<Enter>
-:noremap <F12> :shell<Enter>
-:colorscheme sweyla
+noremap <F11> :BufExplorer<Enter>
+noremap <F12> :shell<Enter>
+colorscheme sweyla
 
 let g:paredit_mode=0
 let g:slimv_swank_clojure = '! xterm -e lein swank &'
 let g:slimv_swank_cmd = '! xterm -e /opt/ecl/bin/ecl -load ~/.vim/slime/start-swank.lisp &' 
+
+" dark parentheses
+autocmd BufRead,BufNewFile,FileType * syn match parens /[(){}\[\]]/ | hi parens ctermfg=245
+"autocmd BufRead,BufNewFile,FileType * syn match parens /[(){}\[\]]/ | hi parens ctermfg=8
