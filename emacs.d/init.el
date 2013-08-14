@@ -10,17 +10,16 @@
 (set-foreground-color "gray")
 (set-cursor-color "gray")
 
+;; modeline stuff was renamed
+(defvar modeline 'modeline)
 (if (and (>= emacs-major-version 24)
 		 (>= emacs-minor-version 3))
-  (progn
-	(set-face-background 'mode-line "black")
-	(set-face-background 'mode-line-inactive "gray10")
-	(set-face-foreground 'mode-line "gray"))
-  (progn
-	(set-face-background 'modeline "black")
-	(set-face-background 'modeline-inactive "gray10")
-	(set-face-foreground 'modeline "gray")))
+	(setq modeline 'mode-line))
 
+(set-face-background modeline "black")
+(set-face-foreground modeline "gray")
+
+(set-face-background 'modeline-inactive "gray10")
 (set-face-foreground 'font-lock-comment-face "#FF7B11")
 (set-face-foreground 'font-lock-constant-face "#92AFCE")
 (set-face-foreground 'font-lock-builtin-face "#FE8592")
@@ -30,7 +29,7 @@
 (set-face-foreground 'font-lock-string-face "#60FFA6")
 (set-face-foreground 'font-lock-doc-face "#FFD86A")
 (set-face-foreground 'font-lock-type-face "#EDFF5F")
- 
+
 ; bold fonts slows things a shit
 (set-face-bold-p 'bold nil)
 ;; disable italics
@@ -45,11 +44,11 @@
 (add-to-list 'default-frame-alist '(font . "Monospace-10"))
 
 (setq bidi-display-reordering nil)
-(setq font-lock-support-mode 'jit-lock-mode)
-(setq jit-lock-stealth-time 16
-	  jit-lock-defer-contextually t
-	  jit-lock-stealth-nice 0.5)
-(setq-default font-lock-multiline t)
+;(setq font-lock-support-mode 'jit-lock-mode)
+;(setq jit-lock-stealth-time 16
+;	  jit-lock-defer-contextually t
+;	  jit-lock-stealth-nice 0.5)
+;(setq-default font-lock-multiline t)
 
 ;; speeds up things considerably
 (setq font-lock-maximum-decoration
@@ -113,7 +112,6 @@
 (defvar evil-want-C-u-scroll t)
 (require 'evil)
 (evil-mode 1)
-
 (evil-ex-define-cmd "bdp" 'kill-buffer)
 
 ;; A small adjustment so we autoload etags-select.el only when this
@@ -155,7 +153,11 @@
   (lambda ()
 	;(require 'rainbow-delimiters)
 	(global-set-key (kbd "C-c C-c") 'lisp-eval-defun)
-	(setq inferior-lisp-program "/usr/local/bin/lein repl")))
+	(global-set-key (kbd "C-c C-k") (lambda ()
+									  (interactive)
+									  (mark-whole-buffer)
+									  (lisp-eval-region (point) (mark))))
+	(setq inferior-lisp-program "lein repl")))
 
 (autoload 'jam-mode "jam-mode.el"
   "Major more for editing jam files" t)
@@ -215,15 +217,15 @@
 		   both nil)))
   (cpp-highlight-buffer t))
 
-(defun warning-keywords ()
-  "Highlight warning keywords."
-  (font-lock-add-keywords nil '(("\\<\\(FIXME\\|TODO\\|BUG\\):" 1 font-lock-warning-face t))))
-
 (add-hook 'c-mode-common-hook
   (lambda ()
-	(warning-keywords)
 	(cpp-highlight-if-0/1)
 	(add-hook 'after-save-hook 'cpp-highlight-if-0/1 'append 'local)))
+
+(add-hook 'prog-mode-hook
+  (lambda ()
+    (font-lock-add-keywords nil
+      '(("\\<\\(NOTE\\|FIXME\\|TODO\\|BUG\\|HACK\\|REFACTOR\\):" 1 font-lock-warning-face t)))))
 
 (global-set-key (kbd "<S-prior>") 'previous-buffer)
 (global-set-key (kbd "<S-next>") 'next-buffer)
