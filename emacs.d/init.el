@@ -157,6 +157,12 @@
 									  (interactive)
 									  (mark-whole-buffer)
 									  (lisp-eval-region (point) (mark))))
+	
+	(global-set-key (kbd "C-c C-d") (lambda ()
+									  (interactive)
+									  (process-send-string "*inferior-lisp*"
+														   (format "(clojure.repl/doc %s)\n"
+																   (symbol-at-point)))))
 	(setq inferior-lisp-program "lein repl")))
 
 (autoload 'jam-mode "jam-mode.el"
