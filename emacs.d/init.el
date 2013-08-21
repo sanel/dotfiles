@@ -155,8 +155,10 @@
 	(global-set-key (kbd "C-c C-c") 'lisp-eval-defun)
 	(global-set-key (kbd "C-c C-k") (lambda ()
 									  (interactive)
-									  (mark-whole-buffer)
-									  (lisp-eval-region (point) (mark))))
+									  (save-excursion
+										(mark-whole-buffer)
+										;(lisp-eval-region (point) (mark))
+										(lisp-eval-region (region-beginning) (region-end)))))
 	
 	(global-set-key (kbd "C-c C-d") (lambda ()
 									  (interactive)
