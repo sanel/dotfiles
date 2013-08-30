@@ -1,0 +1,7 @@
+PS1="[\u@\h \W]\\$ "
+alias E="emacsclient -t -a vim"
+export EDITOR="emacsclient -a vim"
+export COLORFGBG="default:default:0"
+export LANG="en_US"
+export LC_TYPE="en_US"
+export _JAVA_OPTIONS="-Dawt.useSystemAAFontSettings=on -Dswing.aatext=true -Dsun.java2d.opengl=true"
