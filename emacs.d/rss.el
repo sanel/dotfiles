@@ -8,7 +8,6 @@
 
 (setq newsticker-html-renderer 'lynx-renderer)
 
-
 (set-face-foreground 'newsticker-treeview-face "gray")
 (set-face-foreground 'newsticker-treeview-face "gray")
 (set-face-foreground 'newsticker-treeview-selection-face "black")
@@ -35,5 +34,9 @@
 		("Freshmeat" "http://freecode.com/?format=atom" nil 3600)
 		("Planet Clojure" "http://planet.clojure.in/atom.xml" nil 3600)
 		("Planet Gnome" "http://planet.gnome.org/atom.xml" nil 3600)
-		("Hackful Europe" "http://hackful.com/frontpage.rss" nil 3600)
-		("Clojure Google Group" "http://groups.google.com/group/clojure/feed/rss_v2_0_msgs.xml" nil 3600)))
+		("Higher Perspective" "http://altering-perspectives.com/feed" nil 3600)
+		("NewLISP Forum" "http://www.newlispfanclub.alh.net/forum/feed.php" nil 3600)
+		("Slackware Alien" "http://www.slackware.com/~alien/slackbuilds/ChangeLog.rss" nil 3600)
+		("Slackbuilds" "http://slackbuilds.org/rss/ChangeLog.rss" nil 3600)
+		("Clojure" "https://groups.google.com/forum/feed/clojure/topics/rss.xml?num=15" nil 3600)
+		("ULK Forum" "http://forum.linux.org.ba/extern.php?action=feed&type=atom" nil 3600)))
