@@ -148,6 +148,9 @@
 (add-to-list 'auto-mode-alist '("\\.clj" . clojure-mode))
 (add-to-list 'auto-mode-alist '("\\.cljs" . clojure-mode))
 
+(autoload 'newlisp-mode "newlisp-mode.el"
+  "Major mode for editing newLisp files" t)
+
 ;(defun my-clojure-eval-defun ()
 ;  (lisp-eval-defun)
 ;  (process-send-string "*inferior-lisp*" "(use :reload *ns*)"))
