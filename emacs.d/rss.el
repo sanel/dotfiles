@@ -6,6 +6,10 @@
 						   (format "lynx -force_html -dump -stdin %s" url)
 						   (current-buffer)))
 
+;; for browse-url
+(setq browse-url-browser-function 'browse-url-generic
+      browse-url-generic-program "firefox")
+
 (setq newsticker-html-renderer 'lynx-renderer)
 
 (set-face-foreground 'newsticker-treeview-face "gray")

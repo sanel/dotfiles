@@ -151,6 +151,11 @@
 (autoload 'newlisp-mode "newlisp-mode.el"
   "Major mode for editing newLisp files" t)
 
+(autoload 'cmake-mode "cmake-mode.el"
+  "Major mode for editing CMake files" t)
+(add-to-list 'auto-mode-alist '("CMakeLists\\.txt" . cmake-mode))
+(add-to-list 'auto-mode-alist '("\\.cmake" . cmake-mode))
+
 ;(defun my-clojure-eval-defun ()
 ;  (lisp-eval-defun)
 ;  (process-send-string "*inferior-lisp*" "(use :reload *ns*)"))
