@@ -115,6 +115,7 @@
 (defvar evil-want-C-u-scroll t)
 (require 'evil)
 (evil-mode 1)
+(setq-default evil-symbol-word-search t)
 (evil-ex-define-cmd "bdp" 'kill-buffer)
 
 ;; A small adjustment so we autoload etags-select.el only when this
@@ -257,8 +258,8 @@
 ;; slime
 (add-hook 'lisp-mode-hook
   (lambda ()
-	(add-to-list 'load-path "~/.emacs.d/slime/")
 	(setq inferior-lisp-program "~/programs/sbcl/run-sbcl.sh")
+	;(add-to-list 'load-path "~/.emacs.d/slime/")
 	;(require 'slime)
 	;(slime-setup)
 	))
