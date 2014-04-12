@@ -205,6 +205,7 @@
 
 ;; org mode
 (setq org-log-done 'time)
+(setq org-default-notes-file "~/.notes.org")
 
 ;; hide modeline
 (defun toggle-mode-line ()
