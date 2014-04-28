@@ -203,9 +203,6 @@
 ;(autoload 'babel-buffer "babel"
 ;   "Use a web translation service to translate the current buffer." t)
 
-;; org mode
-(setq org-log-done 'time)
-(setq org-default-notes-file "~/.notes.org")
 
 ;; hide modeline
 (defun toggle-mode-line ()
@@ -264,6 +261,18 @@
 	;(require 'slime)
 	;(slime-setup)
 	))
+
+;; org mode
+(add-hook 'org-mode-hook
+  (lambda ()
+	(setq org-log-done 'time
+		  org-default-notes-file "~/.notes.org"
+		  org-icalendar-include-todo t
+		  org-icalendar-use-scheduled '(todo-due event-if-todo event-if-not-todo)
+		  org-icalendar-use-deadline '(todo-due event-if-todo event-if-not-todo)
+		  org-icalendar-timezone "Europe/Sarajevo"
+		  org-icalendar-include-bbdb-anniversaries t
+		  org-icalendar-store-UID t)))
 
 ;; something I can quickly call from eshell
 (defun E (&rest args)
