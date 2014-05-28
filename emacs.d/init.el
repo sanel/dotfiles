@@ -18,7 +18,7 @@
 
 (set-face-background modeline "black")
 (set-face-foreground modeline "gray")
-
+(set-face-foreground 'minibuffer-prompt "green")
 (set-face-background 'modeline-inactive "gray10")
 (set-face-foreground 'font-lock-comment-face "#FF7B11")
 (set-face-foreground 'font-lock-constant-face "#92AFCE")
@@ -30,38 +30,38 @@
 (set-face-foreground 'font-lock-doc-face "#FFD86A")
 (set-face-foreground 'font-lock-type-face "#EDFF5F")
 
-; bold fonts slows things a shit
+;; to keep dark clients
+(setq frame-background-mode 'dark)
+
+; disable bold/italic fonts slows things a shit
+(mapc (lambda (face)
+		(set-face-attribute face nil :weight 'normal :underline nil))
+	  (face-list))
+
 (set-face-bold-p 'bold nil)
-;; disable italics
-(set-face-italic-p 'italic nil)
+(set-face-bold-p 'italic nil)
 
 ;; in case 'emacsclient -c' was called
-(add-to-list 'default-frame-alist '(foreground-color . "gray"))
-(add-to-list 'default-frame-alist '(background-color . "black"))
-(add-to-list 'default-frame-alist '(cursor-color . "gray"))
+;(add-to-list 'default-frame-alist '(foreground-color . "gray"))
+;(add-to-list 'default-frame-alist '(background-color . "black"))
+;(add-to-list 'default-frame-alist '(cursor-color . "gray"))
 
 (set-default-font "Monospace-10")
 (add-to-list 'default-frame-alist '(font . "Monospace-10"))
-
 (setq bidi-display-reordering nil)
-;(setq font-lock-support-mode 'jit-lock-mode)
-;(setq jit-lock-stealth-time 16
-;	  jit-lock-defer-contextually t
-;	  jit-lock-stealth-nice 0.5)
-;(setq-default font-lock-multiline t)
 
 ;; speeds up things considerably
 (setq font-lock-maximum-decoration
-	  '((c-mode . 2) (c++-mode . 2) (t . 1)))
+      '((c-mode . 2) (c++-mode . 2) (t . 1)))
 
 (setq-default c-basic-offset 4
-			  c-default-style "linux"
-			  tab-width 4
-			  shift-width 4
-			  indent-tabs-mode t
-			  ;indicate-empty-lines t
-			  ;show-trailing-whitespace t
-			  )
+              c-default-style "linux"
+              tab-width 4
+              shift-width 4
+              indent-tabs-mode t
+              ;indicate-empty-lines t
+              ;show-trailing-whitespace t
+              )
 
 ;; indent case label by c-indent-level
 (c-set-offset 'case-label '+)
@@ -73,6 +73,7 @@
 
 (menu-bar-mode -1)
 (blink-cursor-mode -1)
+(defalias 'yes-or-no-p 'y-or-n-p)
 
 ;; text width
 (setq-default fill-collumn 72)
@@ -82,9 +83,9 @@
 ;; no backup and autosave
 (setq backup-inhibited t
       auto-save-default nil
-	  ;; scrolling
-	  scroll-step 1
-	  scroll-conservatively 2000)
+      ;; scrolling
+      scroll-step 1
+      scroll-conservatively 2000)
 
 ;; allow buffer erasing
 (put 'erase-buffer 'disabled nil)
@@ -109,7 +110,7 @@
 
 (add-to-list 'load-path "~/.emacs.d")
 (add-to-list 'load-path "~/.emacs.d/modes")
-
+(add-to-list 'load-path "~/.emacs.d/modes/cider")
 (add-to-list 'load-path "~/.emacs.d/evil/lib")
 (add-to-list 'load-path "~/.emacs.d/evil")
 (defvar evil-want-C-u-scroll t)
@@ -117,6 +118,11 @@
 (evil-mode 1)
 (setq-default evil-symbol-word-search t)
 (evil-ex-define-cmd "bdp" 'kill-buffer)
+(evil-ex-define-cmd "winsa[ve]" 'window-configuration-to-register)
+(evil-ex-define-cmd "winlo[ad]" 'jump-to-register)
+(evil-ex-define-cmd "ag[enda]" 'org-agenda)
+(evil-ex-define-cmd "ca[pture]" 'org-capture)
+(evil-ex-define-cmd "ta[propos]" 'tags-apropos)
 
 ;; A small adjustment so we autoload etags-select.el only when this
 ;; sequence was pressed. Evil already predefines 'g]' to be set, but only
@@ -126,17 +132,17 @@
 
 ;; fullscreen support
 (if window-system
-	(defun fullscreen ()
-	  (interactive)
-	  (x-send-client-message nil 0 nil "_NET_WM_STATE" 32
-							 '(2 "_NET_WM_STATE_FULLSCREEN" 0))))
+    (defun fullscreen ()
+      (interactive)
+      (x-send-client-message nil 0 nil "_NET_WM_STATE" 32
+                             '(2 "_NET_WM_STATE_FULLSCREEN" 0))))
 ;; dired addon
 (add-hook 'dired-mode-hook
   (lambda ()
-	(require 'dired-details)
-	(dired-details-install)
-	;; on 'a' do not ask me about creating new buffer
-	(put 'dired-find-alternate-file 'disabled nil)))
+    (require 'dired-details)
+    (dired-details-install)
+    ;; on 'a' do not ask me about creating new buffer
+    (put 'dired-find-alternate-file 'disabled nil)))
 
 (autoload 'markdown-mode "markdown-mode.el"
   "Major mode for editing Markdown files" t)
@@ -157,27 +163,30 @@
 (add-to-list 'auto-mode-alist '("CMakeLists\\.txt" . cmake-mode))
 (add-to-list 'auto-mode-alist '("\\.cmake" . cmake-mode))
 
+(autoload 'groovy-mode "groovy-mode.el"
+  "Major mode for editing files groovy files" t)
+(add-to-list 'auto-mode-alist '("\\.groovy" . groovy-mode))
+(add-to-list 'auto-mode-alist '("\\.gradle" . groovy-mode))
+
 ;(defun my-clojure-eval-defun ()
 ;  (lisp-eval-defun)
 ;  (process-send-string "*inferior-lisp*" "(use :reload *ns*)"))
 
 (add-hook 'clojure-mode-hook
   (lambda ()
-	;(require 'rainbow-delimiters)
-	(global-set-key (kbd "C-c C-c") 'lisp-eval-defun)
-	(global-set-key (kbd "C-c C-k") (lambda ()
-									  (interactive)
-									  (save-excursion
-										(mark-whole-buffer)
-										;(lisp-eval-region (point) (mark))
-										(lisp-eval-region (region-beginning) (region-end)))))
-	
-	(global-set-key (kbd "C-c C-d") (lambda ()
-									  (interactive)
-									  (process-send-string "*inferior-lisp*"
-														   (format "(clojure.repl/doc %s)\n"
-																   (symbol-at-point)))))
-	(setq inferior-lisp-program "lein repl")))
+    ;(require 'rainbow-delimiters)
+    (global-set-key (kbd "C-c C-c") 'lisp-eval-defun)
+    (global-set-key (kbd "C-c C-k") (lambda ()
+                                      (interactive)
+                                      (save-excursion
+                                        (mark-whole-buffer)
+                                        (lisp-eval-region (region-beginning) (region-end)))))
+    (global-set-key (kbd "C-c C-d") (lambda ()
+                                      (interactive)
+                                      (process-send-string "*inferior-lisp*"
+                                                           (format "(clojure.repl/doc %s)\n"
+                                                                   (symbol-at-point)))))
+    (setq inferior-lisp-program "lein repl")))
 
 (autoload 'jam-mode "jam-mode.el"
   "Major more for editing jam files" t)
@@ -209,8 +218,8 @@
   "toggles the modeline on and off"
   (interactive)
   (setq mode-line-format
-		(if (equal mode-line-format nil)
-			(default-value 'mode-line-format)) )
+        (if (equal mode-line-format nil)
+            (default-value 'mode-line-format)))
   (redraw-display))
 
 (defun paste-and-indent ()
@@ -223,22 +232,22 @@
   "Modify the face of text in between #if 0 ... #endif."
   (interactive)
   (setq cpp-known-face '(foreground-color . "chocolate")
-		cpp-unknown-face 'default
-		cpp-face-type 'dark
-		cpp-known-writable 't
-		cpp-unknown-writable 't)
+        cpp-unknown-face 'default
+        cpp-face-type 'dark
+        cpp-known-writable 't
+        cpp-unknown-writable 't)
 
   (setq cpp-edit-list
-		'((#("0" 0 1 (fontified nil))
-		   (foreground-color . "chocolate")
-		   nil
-		   both nil)))
+        '((#("0" 0 1 (fontified nil))
+           (foreground-color . "chocolate")
+           nil
+           both nil)))
   (cpp-highlight-buffer t))
 
 (add-hook 'c-mode-common-hook
   (lambda ()
-	(cpp-highlight-if-0/1)
-	(add-hook 'after-save-hook 'cpp-highlight-if-0/1 'append 'local)))
+    (cpp-highlight-if-0/1)
+    (add-hook 'after-save-hook 'cpp-highlight-if-0/1 'append 'local)))
 
 (add-hook 'prog-mode-hook
   (lambda ()
@@ -256,53 +265,55 @@
 ;; slime
 (add-hook 'lisp-mode-hook
   (lambda ()
-	(setq inferior-lisp-program "~/programs/sbcl/run-sbcl.sh")
-	;(add-to-list 'load-path "~/.emacs.d/slime/")
-	;(require 'slime)
-	;(slime-setup)
-	))
+    (setq inferior-lisp-program "~/programs/sbcl/run-sbcl.sh")
+    ;(add-to-list 'load-path "~/.emacs.d/slime/")
+    ;(require 'slime)
+    ;(slime-setup)
+    ))
 
 ;; org mode
+(setq org-default-notes-file "~/.emacs.d/notes.org")
 (add-hook 'org-mode-hook
   (lambda ()
-	(setq org-log-done 'time
-		  org-default-notes-file "~/.notes.org"
-		  org-icalendar-include-todo t
-		  org-icalendar-use-scheduled '(todo-due event-if-todo event-if-not-todo)
-		  org-icalendar-use-deadline '(todo-due event-if-todo event-if-not-todo)
-		  org-icalendar-timezone "Europe/Sarajevo"
-		  org-icalendar-include-bbdb-anniversaries t
-		  org-icalendar-store-UID t)))
+	(add-to-list 'org-modules 'org-habit)
+    (setq org-log-done 'time
+          org-icalendar-include-todo t
+          org-icalendar-use-scheduled '(todo-due event-if-todo event-if-not-todo)
+          org-icalendar-use-deadline '(todo-due event-if-todo event-if-not-todo)
+          org-icalendar-timezone "Europe/Sarajevo"
+          org-icalendar-include-bbdb-anniversaries t
+          org-icalendar-store-UID t)))
 
 ;; something I can quickly call from eshell
 (defun E (&rest args)
   "Invoke `find-file' on the file. \"vi +42 foo\" also goes to line 42 in the buffer."
   (while args
-	(if (string-match "\\`\\+\\([0-9]+\\)\\'" (car args))
-		(let* ((line (string-to-number (match-string 1 (pop args))))
-			   (file (pop args)))
-		  (find-file file)
-		  (goto-line line))
-	  (find-file (pop args)))))
+    (if (string-match "\\`\\+\\([0-9]+\\)\\'" (car args))
+        (let* ((line (string-to-number (match-string 1 (pop args))))
+               (file (pop args)))
+          (find-file file)
+          (goto-line line))
+      (find-file (pop args)))))
 
 (setenv "EDITOR" "E")
 
 ;(message ".emacs loaded in %ds"
-;		 (destructuring-bind (hi lo ms) (current-time)
-;		   (-
-;			 (+ hi lo)
-;			 (+ (first *emacs-load-start*)
-;				(second *emacs-load-start*)))))
+;        (destructuring-bind (hi lo ms) (current-time)
+;          (-
+;            (+ hi lo)
+;            (+ (first *emacs-load-start*)
+;               (second *emacs-load-start*)))))
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- )
+ '(org-agenda-files (quote ("~/cloud/TODO.org"))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(newsticker-treeview-old-face ((t (:inherit nil)))))
+ '(newsticker-treeview-old-face ((t (:inherit nil))) t)
+ '(org-agenda-date ((t (:inherit org-agenda-structure))) t))
