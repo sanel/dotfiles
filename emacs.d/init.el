@@ -47,7 +47,7 @@
 ;(add-to-list 'default-frame-alist '(cursor-color . "gray"))
 
 (set-default-font "Monospace-10")
-(add-to-list 'default-frame-alist '(font . "Monospace-10"))
+;(add-to-list 'default-frame-alist '(font . "inconsolata-12"))
 (setq bidi-display-reordering nil)
 
 ;; speeds up things considerably
@@ -66,10 +66,36 @@
 ;; indent case label by c-indent-level
 (c-set-offset 'case-label '+)
 
-(when window-system
-  (tool-bar-mode -1)
-  (tooltip-mode  -1)
-  (set-scroll-bar-mode 'right))
+(if window-system
+  (progn
+	(tool-bar-mode -1)
+	(tooltip-mode  -1)
+	(set-scroll-bar-mode 'right)
+
+	(defun fullscreen ()
+	  (interactive)
+	  (x-send-client-message nil 0 nil "_NET_WM_STATE" 32
+							 '(2 "_NET_WM_STATE_FULLSCREEN" 0))))
+  (progn
+	;; fix copy/paste from terminal
+	(when (getenv "DISPLAY")
+	  (defun xsel-cut-function (text &optional push)
+		;; insert text to temp-buffer, and "send" content to xsel stdin
+		(with-temp-buffer
+		  (insert text)
+		  (call-process-region (point-min) (point-max) "xsel" nil 0 nil "--clipboard" "--input")))
+
+	  (defun xsel-paste-function()
+		;; Find out what is current selection by xsel. If it is different
+		;; from the top of the kill-ring (car kill-ring), then return
+		;; it. Else, nil is returned, so whatever is in the top of the
+		;; kill-ring will be used.
+		(let ((xsel-output (shell-command-to-string "xsel --clipboard --output")))
+		  (unless (string= (car kill-ring) xsel-output)
+			xsel-output)))
+	  ;; Attach callbacks to hooks
+	  (setq interprogram-cut-function 'xsel-cut-function)
+	  (setq interprogram-paste-function 'xsel-paste-function))))
 
 (menu-bar-mode -1)
 (blink-cursor-mode -1)
@@ -110,10 +136,10 @@
 
 (add-to-list 'load-path "~/.emacs.d")
 (add-to-list 'load-path "~/.emacs.d/modes")
-(add-to-list 'load-path "~/.emacs.d/modes/cider")
 (add-to-list 'load-path "~/.emacs.d/evil/lib")
 (add-to-list 'load-path "~/.emacs.d/evil")
 (defvar evil-want-C-u-scroll t)
+(setq evil-search-module 'evil-search)
 (require 'evil)
 (evil-mode 1)
 (setq-default evil-symbol-word-search t)
@@ -130,19 +156,9 @@
 (define-key evil-motion-state-map "g]" 'etags-select-find-tag-at-point)
 (autoload 'etags-select-find-tag-at-point "etags-select")
 
-;; fullscreen support
-(if window-system
-    (defun fullscreen ()
-      (interactive)
-      (x-send-client-message nil 0 nil "_NET_WM_STATE" 32
-                             '(2 "_NET_WM_STATE_FULLSCREEN" 0))))
-;; dired addon
-(add-hook 'dired-mode-hook
-  (lambda ()
-    (require 'dired-details)
-    (dired-details-install)
-    ;; on 'a' do not ask me about creating new buffer
-    (put 'dired-find-alternate-file 'disabled nil)))
+(add-to-list 'auto-mode-alist '("\\.claws-mail/tmp/tmpmsg\\.0x" . mail-mode))
+;; on 'a' do not ask me about creating new buffer
+(put 'dired-find-alternate-file 'disabled nil)
 
 (autoload 'markdown-mode "markdown-mode.el"
   "Major mode for editing Markdown files" t)
@@ -195,23 +211,19 @@
 (add-to-list 'auto-mode-alist '("Jamfile" . jam-mode))
 (add-to-list 'auto-mode-alist '("Jamrules" . jam-mode))
 
-;; stolent from: http://www.credmp.org/?p=27
-;(require 'url)
-;(defun google-it (term)
-;  "Search term in google."
-;  (interactive "sSearch for: ")
-;  (browse-url (concat "http://www.google.com/search?q="
-;                      (url-hexify-string (encode-coding-string term 'utf-8)) )))
+;; google selection
+(defun lookup-selection ()
+  "Lookup word under cursor or selection in given browser engine."
+  (interactive)
+  (let* ((engine "https://www.google.com/search?q=")
+		 (word   (if (region-active-p)
+				   (buffer-substring-no-properties (region-beginning) (region-end))
+				   (thing-at-point 'symbol)))
+		 (word   (replace-regexp-in-string " " "+" word)))
+	(browse-url (concat engine word))))
 
-;(autoload 'babel "babel"
-;   "Use a web translation service to translate the message MSG." t)
-;(autoload 'babel-region "babel"
-;   "Use a web translation service to translate the current region." t)
-;(autoload 'babel-as-string "babel"
-;   "Use a web translation service to translate MSG, returning a string." t)
-;(autoload 'babel-buffer "babel"
-;   "Use a web translation service to translate the current buffer." t)
-
+(define-key evil-normal-state-map "\\s" 'lookup-selection)
+(define-key evil-visual-state-map "\\s" 'lookup-selection)
 
 ;; hide modeline
 (defun toggle-mode-line ()
@@ -256,7 +268,9 @@
 
 (global-set-key (kbd "<S-prior>") 'previous-buffer)
 (global-set-key (kbd "<S-next>") 'next-buffer)
-(global-set-key [f11] 'ibuffer)
+(global-set-key [f9]  'org-agenda)
+(global-set-key [f11] 'neotree-toggle)
+(autoload 'neotree-toggle "neotree")
 (global-set-key [f12] 'eshell)
 
 ;; force TAB on Shift-Tab
@@ -272,7 +286,13 @@
     ))
 
 ;; org mode
-(setq org-default-notes-file "~/.emacs.d/notes.org")
+(setq org-default-notes-file "~/cloud/org/notes.org")
+(setq org-agenda-files '("~/cloud/org/TODO.org"))
+(setq org-directory "~/cloud/org")
+(setq org-mobile-files '("~/cloud/org/movies.org" "~/cloud/org/TODO.org" "~/cloud/org/notes.org"))
+(setq org-mobile-inbox-for-pull "~/cloud/org/notes.org")
+(setq org-mobile-directory "~/cloud/org/mobileorg")
+
 (add-hook 'org-mode-hook
   (lambda ()
 	(add-to-list 'org-modules 'org-habit)
@@ -309,7 +329,7 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(org-agenda-files (quote ("~/cloud/TODO.org"))))
+)
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
