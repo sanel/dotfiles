@@ -279,12 +279,12 @@
     (setq inferior-lisp-program "~/programs/sbcl/run-sbcl.sh")))
 
 ;; org mode
-(setq org-default-notes-file "~/cloud/org/notes.org")
-(setq org-agenda-files '("~/cloud/org/TODO.org"))
 (setq org-directory "~/cloud/org")
-(setq org-mobile-files '("~/cloud/org/movies.org" "~/cloud/org/TODO.org" "~/cloud/org/notes.org"))
-(setq org-mobile-inbox-for-pull "~/cloud/org/notes.org")
-(setq org-mobile-directory "~/cloud/org/mobileorg")
+(setq org-default-notes-file (format "%s/notes.org" org-directory))
+(setq org-agenda-files (list (format "%s/TODO.org" org-directory)))
+(setq org-mobile-files (list org-directory))
+(setq org-mobile-inbox-for-pull (format "%s/notes.org" org-directory))
+(setq org-mobile-directory (format "%s/mobileorg" org-directory))
 
 (add-hook 'org-mode-hook
   (lambda ()
