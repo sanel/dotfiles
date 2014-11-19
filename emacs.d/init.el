@@ -35,16 +35,11 @@
 
 ; disable bold/italic fonts slows things a shit
 (mapc (lambda (face)
-		(set-face-attribute face nil :weight 'normal :underline nil))
-	  (face-list))
+        (set-face-attribute face nil :weight 'normal :underline nil))
+      (face-list))
 
 (set-face-bold-p 'bold nil)
 (set-face-bold-p 'italic nil)
-
-;; in case 'emacsclient -c' was called
-;(add-to-list 'default-frame-alist '(foreground-color . "gray"))
-;(add-to-list 'default-frame-alist '(background-color . "black"))
-;(add-to-list 'default-frame-alist '(cursor-color . "gray"))
 
 (set-default-font "Monospace-10")
 ;(add-to-list 'default-frame-alist '(font . "inconsolata-12"))
@@ -68,34 +63,40 @@
 
 (if window-system
   (progn
-	(tool-bar-mode -1)
-	(tooltip-mode  -1)
-	(set-scroll-bar-mode 'right)
+    (tool-bar-mode -1)
+    (tooltip-mode  -1)
+    (set-scroll-bar-mode 'right)
 
-	(defun fullscreen ()
-	  (interactive)
-	  (x-send-client-message nil 0 nil "_NET_WM_STATE" 32
-							 '(2 "_NET_WM_STATE_FULLSCREEN" 0))))
+    (defun fullscreen ()
+      (interactive)
+      (x-send-client-message nil 0 nil "_NET_WM_STATE" 32
+                             '(2 "_NET_WM_STATE_FULLSCREEN" 0))))
   (progn
-	;; fix copy/paste from terminal
-	(when (getenv "DISPLAY")
-	  (defun xsel-cut-function (text &optional push)
-		;; insert text to temp-buffer, and "send" content to xsel stdin
-		(with-temp-buffer
-		  (insert text)
-		  (call-process-region (point-min) (point-max) "xsel" nil 0 nil "--clipboard" "--input")))
+    ;; fix copy/paste from terminal
+    (when (getenv "DISPLAY")
+      (defadvice x-set-selection (around my-x-set-selection (type data))
+        (message "Copied to %s selection" type)
+        (let ((sel-type
+               (cond
+                ((eq type 'PRIMARY) "--primary")
+                ((eq type 'CLIPBOARD) "--clipboard")
+                (t
+                 (error "Got unknown selection type: %s" type)))))
+          (with-temp-buffer
+            (insert text)
+            (call-process-region (point-min) (point-max) "xsel" nil 0 nil sel-type "--input"))))
 
-	  (defun xsel-paste-function()
-		;; Find out what is current selection by xsel. If it is different
-		;; from the top of the kill-ring (car kill-ring), then return
-		;; it. Else, nil is returned, so whatever is in the top of the
-		;; kill-ring will be used.
-		(let ((xsel-output (shell-command-to-string "xsel --clipboard --output")))
-		  (unless (string= (car kill-ring) xsel-output)
-			xsel-output)))
-	  ;; Attach callbacks to hooks
-	  (setq interprogram-cut-function 'xsel-cut-function)
-	  (setq interprogram-paste-function 'xsel-paste-function))))
+      (defadvice x-get-selection-value (before my-x-get-selection-value)
+        (message "Paste from PRIMARY selection")
+        (insert (shell-command-to-string "xsel --primary --output")))
+
+      (defadvice x-get-clipboard (before my-x-get-clipboard)
+        (message "Paste from CLIPBOARD selection")
+        (insert (shell-command-to-string "xsel --clipboard --output")))
+
+      (ad-activate 'x-set-selection)
+      (ad-activate 'x-get-selection-value)
+      (ad-activate 'x-get-clipboard))))
 
 (menu-bar-mode -1)
 (blink-cursor-mode -1)
@@ -122,22 +123,12 @@
 ;; tramp
 (setq password-cache-expiry nil)
 
-;; Viper
-;(setq viper-mode t)
-;(setq viper-inhibit-startup-message t)
-;(setq viper-expert-level '3)
-;(setq viper-auto-indent t)
-;(setq viper-fast-keyseq-timeout 50)
-;(set 'viper-no-multiple-ESC t)
-;(defun viper-translate-all-ESC-keysequences () t)
-;(global-set-key [(control w)] 'other-window)
-;(require 'viper)
-;(load "~/.emacs.d/vimlike.el")
-
+;; evil
 (add-to-list 'load-path "~/.emacs.d")
 (add-to-list 'load-path "~/.emacs.d/modes")
 (add-to-list 'load-path "~/.emacs.d/evil/lib")
 (add-to-list 'load-path "~/.emacs.d/evil")
+
 (defvar evil-want-C-u-scroll t)
 (setq evil-search-module 'evil-search)
 (require 'evil)
@@ -149,6 +140,10 @@
 (evil-ex-define-cmd "ag[enda]" 'org-agenda)
 (evil-ex-define-cmd "ca[pture]" 'org-capture)
 (evil-ex-define-cmd "ta[propos]" 'tags-apropos)
+(evil-ex-define-cmd "mks[ession]" 'desktop-save)
+(evil-ex-define-cmd "so[urce]" 'desktop-change-dir)
+
+(autoload 'ack "ack")
 
 ;; A small adjustment so we autoload etags-select.el only when this
 ;; sequence was pressed. Evil already predefines 'g]' to be set, but only
@@ -192,16 +187,25 @@
   (lambda ()
     ;(require 'rainbow-delimiters)
     (global-set-key (kbd "C-c C-c") 'lisp-eval-defun)
-    (global-set-key (kbd "C-c C-k") (lambda ()
-                                      (interactive)
-                                      (save-excursion
-                                        (mark-whole-buffer)
-                                        (lisp-eval-region (region-beginning) (region-end)))))
-    (global-set-key (kbd "C-c C-d") (lambda ()
-                                      (interactive)
-                                      (process-send-string "*inferior-lisp*"
-                                                           (format "(clojure.repl/doc %s)\n"
-                                                                   (symbol-at-point)))))
+    (global-set-key (kbd "C-c C-k")
+                    (lambda ()
+                      (interactive)
+                      (save-excursion
+                        (mark-whole-buffer)
+                        (lisp-eval-region (region-beginning) (region-end)))))
+    (global-set-key (kbd "C-c C-d")
+                    (lambda (symbol)
+                      (interactive
+                       (list
+                        (let* ((sym (thing-at-point 'symbol))
+                               (sym (if sym (substring-no-properties sym)))
+                               (prompt "Describe")
+                               (prompt (if sym
+                                           (format "%s (default %s): " prompt sym)
+                                         (concat prompt ": "))))
+                          (read-string prompt nil nil sym))))
+                      (process-send-string "*inferior-lisp*"
+                                           (format "(clojure.repl/doc %s)\n" symbol))))
     (setq inferior-lisp-program "lein repl")))
 
 (autoload 'jam-mode "jam-mode.el"
@@ -216,11 +220,11 @@
   "Lookup word under cursor or selection in given browser engine."
   (interactive)
   (let* ((engine "https://www.google.com/search?q=")
-		 (word   (if (region-active-p)
-				   (buffer-substring-no-properties (region-beginning) (region-end))
-				   (thing-at-point 'symbol)))
-		 (word   (replace-regexp-in-string " " "+" word)))
-	(browse-url (concat engine word))))
+         (word   (if (region-active-p)
+                   (buffer-substring-no-properties (region-beginning) (region-end))
+                   (thing-at-point 'symbol)))
+         (word   (replace-regexp-in-string " " "+" word)))
+    (browse-url (concat engine word))))
 
 (define-key evil-normal-state-map "\\s" 'lookup-selection)
 (define-key evil-visual-state-map "\\s" 'lookup-selection)
@@ -233,12 +237,6 @@
         (if (equal mode-line-format nil)
             (default-value 'mode-line-format)))
   (redraw-display))
-
-(defun paste-and-indent ()
-  "Paste text and do indent on it."
-  (interactive)
-  (yank)
-  (call-interactively 'indent-region))
 
 (defun cpp-highlight-if-0/1 ()
   "Modify the face of text in between #if 0 ... #endif."
@@ -268,7 +266,7 @@
 
 (global-set-key (kbd "<S-prior>") 'previous-buffer)
 (global-set-key (kbd "<S-next>") 'next-buffer)
-(global-set-key [f9]  'org-agenda)
+(global-set-key [f9]  'ibuffer)
 (global-set-key [f11] 'neotree-toggle)
 (autoload 'neotree-toggle "neotree")
 (global-set-key [f12] 'eshell)
@@ -276,14 +274,9 @@
 ;; force TAB on Shift-Tab
 (global-set-key (kbd "<backtab>") (lambda () (interactive) (insert-char 9 1)))
 
-;; slime
 (add-hook 'lisp-mode-hook
   (lambda ()
-    (setq inferior-lisp-program "~/programs/sbcl/run-sbcl.sh")
-    ;(add-to-list 'load-path "~/.emacs.d/slime/")
-    ;(require 'slime)
-    ;(slime-setup)
-    ))
+    (setq inferior-lisp-program "~/programs/sbcl/run-sbcl.sh")))
 
 ;; org mode
 (setq org-default-notes-file "~/cloud/org/notes.org")
@@ -295,7 +288,7 @@
 
 (add-hook 'org-mode-hook
   (lambda ()
-	(add-to-list 'org-modules 'org-habit)
+    (add-to-list 'org-modules 'org-habit)
     (setq org-log-done 'time
           org-icalendar-include-todo t
           org-icalendar-use-scheduled '(todo-due event-if-todo event-if-not-todo)
