@@ -65,10 +65,13 @@
       message-send-mail-function 'message-send-mail-with-sendmail
       sendmail-program "/usr/bin/msmtp"
       mm-text-html-renderer 'lynx
-	  browse-url-browser-function 'browse-url
 	  notmuch-mua-hidden-headers '()
-	  notmuch-mua-user-agent-function'notmuch-mua-user-agent-notmuch
+	  notmuch-mua-user-agent-function 'notmuch-mua-user-agent-notmuch
+	  notmuch-message-headers '("Subject" "To" "Cc" "Date" "User-Agent")
+	  notmuch-mua-hidden-headers nil
 	  ; notmuch-crypto-process-mime t
-      notmuch-address-command "~/Maildir/notmuch-addrlookup")
+      notmuch-address-command "~/Maildir/notmuch-addrlookup"
+	  ;message-user-fqdn "foo.com"
+	  )
 
 (notmuch-address-message-insinuate)

@@ -4,6 +4,14 @@
 ;; will correctly know how to use default colors
 (setenv "COLORFGBG" "default;default;0")
 
+;; package archives
+(setq package-archives
+	  '(("gnu" . "http://elpa.gnu.org/packages/")
+		("melpa-stable" . "http://melpa-stable.milkbox.net/packages/")
+		("marmalade" . "http://marmalade-repo.org/packages/")))
+
+(add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
+
 ;; basic stuff
 (setq inhibit-splash-screen t)
 (set-background-color "black")
@@ -57,6 +65,9 @@
               ;indicate-empty-lines t
               ;show-trailing-whitespace t
               )
+
+;; 24.4 addon
+(setq blink-matching-paren 'jump)
 
 ;; indent case label by c-indent-level
 (c-set-offset 'case-label '+)
@@ -117,11 +128,17 @@
 ;; allow buffer erasing
 (put 'erase-buffer 'disabled nil)
 
-;; no vc
-(setq vc-handled-backends nil)
+;; vc
+(setq vc-handled-backends '(SVN Git))
 
 ;; tramp
 (setq password-cache-expiry nil)
+
+;; ido fuzzy mode
+(setq ido-enable-flex-matching t)
+
+;; ibuffer
+(setq ibuffer-show-empty-filter-groups nil)
 
 ;; evil
 (add-to-list 'load-path "~/.emacs.d")
@@ -142,6 +159,7 @@
 (evil-ex-define-cmd "ta[propos]" 'tags-apropos)
 (evil-ex-define-cmd "mks[ession]" 'desktop-save)
 (evil-ex-define-cmd "so[urce]" 'desktop-change-dir)
+(evil-ex-define-cmd "bi[do]" 'ido-switch-buffer)
 
 (autoload 'ack "ack")
 
@@ -150,6 +168,10 @@
 ;; after etags-select.el was loaded...
 (define-key evil-motion-state-map "g]" 'etags-select-find-tag-at-point)
 (autoload 'etags-select-find-tag-at-point "etags-select")
+
+(add-to-list 'evil-emacs-state-modes 'etags-stack-mode)
+(autoload 'etags-stack-show "etags-stack")
+(evil-ex-define-cmd "tags" 'etags-stack-show)
 
 (add-to-list 'auto-mode-alist '("\\.claws-mail/tmp/tmpmsg\\.0x" . mail-mode))
 ;; on 'a' do not ask me about creating new buffer
@@ -286,9 +308,29 @@
 (setq org-mobile-inbox-for-pull (format "%s/notes.org" org-directory))
 (setq org-mobile-directory (format "%s/mobileorg" org-directory))
 
+;; org appointments; with this, org-mode scheduled items will be notified 10 minutes
+;; earlier. To make it work, make sure to run ':ag' or 'org-agenda' so the entries are
+;; populated inside 'appt-time-msg-list'.
+;;
+;; To see current entries, print 'appt-time-msg-list'.
+(setq appt-message-warning-time 10 ;; warn 10 min in advance
+	  appt-display-mode-line t     ;; show in the modeline
+	  appt-display-format 'window) ;; use our func
+(appt-activate 1)              ;; active appt (appointment notification)
+
+;; update appt each time agenda opened
+(add-hook 'org-finalize-agenda-hook 'org-agenda-to-appt)
+
+;; org html export style
+(setq org-export-html-style-include-scripts nil
+      org-export-html-style-include-default nil)
+
+(setq org-export-html-style "<link rel=\"stylesheet\" type=\"text/css\" href=\"http://thomasf.github.io/solarized-css/solarized-dark.min.css\" />")
+
 (add-hook 'org-mode-hook
   (lambda ()
-    (add-to-list 'org-modules 'org-habit)
+	(add-to-list 'org-modules 'org-habit)
+	(require 'org-habit) ;; without this, org-habit will not work for me
     (setq org-log-done 'time
           org-icalendar-include-todo t
           org-icalendar-use-scheduled '(todo-due event-if-todo event-if-not-todo)
@@ -296,6 +338,10 @@
           org-icalendar-timezone "Europe/Sarajevo"
           org-icalendar-include-bbdb-anniversaries t
           org-icalendar-store-UID t)))
+
+;; for browse-url
+(setq browse-url-browser-function 'browse-url-generic
+      browse-url-generic-program "firefox")
 
 ;; something I can quickly call from eshell
 (defun E (&rest args)
@@ -310,6 +356,22 @@
 
 (setenv "EDITOR" "E")
 
+(defun insert-today-date ()
+  "Insert date in form 'abbr-week-name, day-in-month."
+  (interactive)
+  (insert (format-time-string "%a, %d")))
+
+(defun dos2unix ()
+  "Not exactly but it's easier to remember"
+  (interactive)
+  (set-buffer-file-coding-system 'unix 't) )
+
+;;; load the rest
+(load-file "~/.emacs.d/rss-setup.el")
+(load-file "~/.emacs.d/notmuch-setup.el")
+(load-file "~/programs/projects/monroe/monroe.el")
+(add-hook 'clojure-mode-hook 'clojure-enable-monroe)
+
 ;(message ".emacs loaded in %ds"
 ;        (destructuring-bind (hi lo ms) (current-time)
 ;          (-
@@ -322,11 +384,11 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
-)
+ '(send-mail-function (quote mailclient-send-it)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(newsticker-treeview-old-face ((t (:inherit nil))) t)
+ '(newsticker-treeview-old-face ((t (:inherit nil))))
  '(org-agenda-date ((t (:inherit org-agenda-structure))) t))

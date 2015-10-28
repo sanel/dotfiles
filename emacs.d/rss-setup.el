@@ -6,17 +6,13 @@
 						   (format "lynx -force_html -dump -stdin %s" url)
 						   (current-buffer)))
 
-;; for browse-url
-(setq browse-url-browser-function 'browse-url-generic
-      browse-url-generic-program "firefox")
-
 (setq newsticker-html-renderer 'lynx-renderer)
 
 ;; for gnutls to remove warning
 (setq gnutls-min-prime-bits 1024)
 
 (set-face-foreground 'newsticker-treeview-face "gray")
-(set-face-foreground 'newsticker-treeview-face "gray")
+(set-face-foreground 'newsticker-treeview-new-face "#00afaf")
 (set-face-foreground 'newsticker-treeview-selection-face "black")
 (set-face-foreground 'newsticker-treeview-old-face "gray")
 
@@ -27,26 +23,33 @@
 	  newsticker-retrieval-interval  3600
 	  newsticker-treeview-treewindow-width 40
 	  newsticker-treeview-listwindow-height 10
-	  newsticker-automatically-mark-items-as-old t
+	  newsticker-automatically-mark-items-as-old nil
 	  newsticker-automatically-mark-visited-items-as-old t
 	  newsticker-url-list-defaults nil)
 
 (setq newsticker-url-list
-	  '(("Slashdot" "http://slashdot.org/slashdot.rss")
+	  '(("KupiKartu" "http://www.kupikartu.ba/home/rss")
+		("Slashdot" "http://slashdot.org/slashdot.rss")
 		("LWN" "http://lwn.net/headlines/newrss")
 		("Hacker News" "http://news.ycombinator.com/rss")
-		("Reddit Programming" "http://www.reddit.com/r/programming/.rss")
 		("Reddit Salvage" "http://www.reddit.com/r/electronicssalvage/.rss")
-		("Reddit Scheme" "http://www.reddit.com/r/scheme/.rss")
-		("Reddit Lisp" "http://www.reddit.com/r/lisp/.rss")
 		("Reddit Arduino" "http://www.reddit.com/r/arduino/.rss")
-		("Freshmeat" "http://freecode.com/?format=atom")
+		("Reddit Lisp" "http://www.reddit.com/r/lisp/.rss")
+		("Reddit Programming" "http://www.reddit.com/r/programming/.rss")
+		("Reddit Scheme" "http://www.reddit.com/r/scheme/.rss")
+		("Reddit Emacs" "http://www.reddit.com/r/emacs/.rss")
 		("Planet Clojure" "http://planet.clojure.in/atom.xml")
-		("Planet Gnome" "http://planet.gnome.org/atom.xml")
-		("Higher Perspective" "http://altering-perspectives.com/feed")
+		("Clojure" "https://groups.google.com/forum/feed/clojure/topics/rss.xml?num=25")
 		("NewLISP Forum" "http://www.newlispfanclub.alh.net/forum/feed.php")
 		("Slackware Alien" "http://www.slackware.com/~alien/slackbuilds/ChangeLog.rss")
 		("Slackbuilds" "http://slackbuilds.org/rss/ChangeLog.rss")
-		("Clojure" "https://groups.google.com/forum/feed/clojure/topics/rss.xml?num=25")
-		("Disclose.tv" "http://www.disclose.tv/media/rss")
-		("ULK Forum" "http://forum.linux.org.ba/extern.php?action=feed&type=atom")))
+		("CommanlineFu" "http://www.commandlinefu.com/feed/tenup")
+		("XE" "http://community.xe.com/taxonomy/term/15/feed")
+		("Pymnts" "http://www.pymnts.com/feed/")
+		;("Higher Perspective" "http://altering-perspectives.com/feed")
+		("BlackHat" "http://www.blackhatworld.com/blackhat-seo/external.php?type=RSS2")
+		("Elance #2" "https://www.elance.com/r/rss/jobs/cat-it-programming/p-2")
+		("Elance #1" "https://www.elance.com/r/rss/jobs/cat-it-programming/p-1")
+		("Goremote" "https://goremote.io/rss")
+		("SO Careers" "https://careers.stackoverflow.com/jobs/feed?allowsremote=True")
+		))
