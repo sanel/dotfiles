@@ -41,7 +41,8 @@
 ;; to keep dark clients
 (setq frame-background-mode 'dark)
 
-; disable bold/italic fonts slows things a shit
+; Disable bold/italic fonts slows things a shit. It is done last, so other mode
+; does not set it in the mean time.
 (mapc (lambda (face)
         (set-face-attribute face nil :weight 'normal :underline nil))
       (face-list))
@@ -55,7 +56,7 @@
 
 ;; speeds up things considerably
 (setq font-lock-maximum-decoration
-      '((c-mode . 2) (c++-mode . 2) (t . 1)))
+	  '((c-mode . 2) (c++-mode . 2) (java-mode . 2) (t . 1)))
 
 (setq-default c-basic-offset 4
               c-default-style "linux"
@@ -85,32 +86,32 @@
   (progn
     ;; fix copy/paste from terminal
     (when (getenv "DISPLAY")
-      (defadvice x-set-selection (around my-x-set-selection (type data))
+	  (defun selection-type-to-xsel-arg (type)
+		(cond
+		 ((eq type 'PRIMARY) "--primary")
+		 ((eq type 'CLIPBOARD) "--clipboard")
+		 (t
+		  (error "Got unknown selection type: %s" type))))
+ 
+      (defun x-set-selection (type data)
         (message "Copied to %s selection" type)
-        (let ((sel-type
-               (cond
-                ((eq type 'PRIMARY) "--primary")
-                ((eq type 'CLIPBOARD) "--clipboard")
-                (t
-                 (error "Got unknown selection type: %s" type)))))
+        (let ((sel-type (selection-type-to-xsel-arg type)))
           (with-temp-buffer
             (insert text)
             (call-process-region (point-min) (point-max) "xsel" nil 0 nil sel-type "--input"))))
-
-      (defadvice x-get-selection-value (before my-x-get-selection-value)
-        (message "Paste from PRIMARY selection")
-        (insert (shell-command-to-string "xsel --primary --output")))
-
-      (defadvice x-get-clipboard (before my-x-get-clipboard)
-        (message "Paste from CLIPBOARD selection")
-        (insert (shell-command-to-string "xsel --clipboard --output")))
-
-      (ad-activate 'x-set-selection)
-      (ad-activate 'x-get-selection-value)
-      (ad-activate 'x-get-clipboard))))
+	  
+	  (defun x-get-selection (type data)
+		(message "Paste from %s selection" type)
+		(let ((sel-type (selection-type-to-xsel-arg type)))
+		  (insert (shell-command-to-string (format "xsel %s --output" sel-type)))))
+	  ;; make sure we have this or evil pasting mechanism will try all types, causing
+	  ;; it to paste content 3 times
+	  (setq x-select-request-type 'STRING))))
 
 (menu-bar-mode -1)
 (blink-cursor-mode -1)
+;; disable blinking in urxvt
+(setq visible-cursor nil)
 (defalias 'yes-or-no-p 'y-or-n-p)
 
 ;; text width
@@ -181,6 +182,9 @@
   "Major mode for editing Markdown files" t)
 
 (add-to-list 'auto-mode-alist '("\\.md" . markdown-mode))
+
+(autoload 'restclient "restclient.el"
+  "Major mode for contacting REST services" t)
 
 (autoload 'clojure-mode "clojure-mode.el"
   "Major mode for editing cloure files" t)
@@ -304,7 +308,9 @@
 (setq org-directory "~/cloud/org")
 (setq org-default-notes-file (format "%s/notes.org" org-directory))
 (setq org-agenda-files (list (format "%s/TODO.org" org-directory)))
-(setq org-mobile-files (list org-directory))
+(setq org-mobile-files (mapcar (lambda (x)
+								 (concat org-directory "/" x))
+							   '("TODO.org" "auto.org" "notes.org" "movies.org")))
 (setq org-mobile-inbox-for-pull (format "%s/notes.org" org-directory))
 (setq org-mobile-directory (format "%s/mobileorg" org-directory))
 
@@ -318,15 +324,15 @@
 	  appt-display-format 'window) ;; use our func
 (appt-activate 1)              ;; active appt (appointment notification)
 
-;; update appt each time agenda opened
+ ;; update appt each time agenda opened
 (add-hook 'org-finalize-agenda-hook 'org-agenda-to-appt)
 
 ;; org html export style
 (setq org-export-html-style-include-scripts nil
-      org-export-html-style-include-default nil)
+	  org-export-html-style-include-default nil)
 
 (setq org-export-html-style "<link rel=\"stylesheet\" type=\"text/css\" href=\"http://thomasf.github.io/solarized-css/solarized-dark.min.css\" />")
-
+ 
 (add-hook 'org-mode-hook
   (lambda ()
 	(add-to-list 'org-modules 'org-habit)
@@ -384,6 +390,8 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(ibuffer-saved-filter-groups (quote (("my-filter-group" ("pav-conf" (filename . "pav-conf")) ("pav-api" (filename . "pav-api")) ("uino-scraper" (filename . "uino-scraper")) ("pav-user-api" (filename . "pav-user-api")) ("pav-nlp-playground" (filename . "pav-nlp-playground")) ("pav-profile-timeline-worker" (filename . "pav-profile-timeline-worker")) ("fwd" (filename . "fwd")) ("pav-congress-api-bootstrapper" (filename . "pav-congress-api-bootstrapper")) ("OpenGrok" (filename . "OpenGrok")) ("onyx-starter" (filename . "onyx-starter")) ("onyx-examples" (filename . "onyx-examples")) ("wick" (filename . "wick")) ("drivewatch" (filename . "drivewatch")) ("booster" (filename . "booster")) ("b2c" (filename . "blogger2cryogen")) ("cryogen-html" (filename . "cryogen-html")) ("acidwords" (filename . "acidwords")) ("lein-vaadin" (filename . "lein-vaadin-template")) ("elan" (filename . "elan")) ("if-else" (filename . "if-else")) ("omp" (filename . "omp")) ("ex" (filename . "emailxtractor")) ("ophion" (filename . "ophion")) ("yaims" (filename . "yaims")) ("aries" (filename . "aries")) ("org" (used-mode . org-mode)) ("novate" (filename . "novate"))))))
+ '(ibuffer-saved-filters (quote (("gnus" ((or (mode . message-mode) (mode . mail-mode) (mode . gnus-group-mode) (mode . gnus-summary-mode) (mode . gnus-article-mode)))) ("programming" ((or (mode . emacs-lisp-mode) (mode . cperl-mode) (mode . c-mode) (mode . java-mode) (mode . idl-mode) (mode . lisp-mode)))))))
  '(send-mail-function (quote mailclient-send-it)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.

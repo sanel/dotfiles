@@ -56,6 +56,13 @@
 (evil-ex-define-cmd "nmw" 'notmuch-week)
 (evil-ex-define-cmd "nms" 'evil-nms)
 (evil-ex-define-cmd "nmc" 'notmuch-mua-new-mail)
+(evil-ex-define-cmd "mail-sign" 'mml-secure-message-sign-pgpmime)
+(evil-ex-define-cmd "mail-encrypt" 'mml-secure-encrypt-pgpmime)
+(evil-ex-define-cmd "mail-decrypt" 'epa-decrypt-region)
+
+;; epa-mail-decrypt
+;; epa-mail-verify
+;; epa-mail-sign/epa-mail-encrypt
 
 ;; options 
 
@@ -69,9 +76,11 @@
 	  notmuch-mua-user-agent-function 'notmuch-mua-user-agent-notmuch
 	  notmuch-message-headers '("Subject" "To" "Cc" "Date" "User-Agent")
 	  notmuch-mua-hidden-headers nil
-	  ; notmuch-crypto-process-mime t
+	  notmuch-crypto-process-mime t
       notmuch-address-command "~/Maildir/notmuch-addrlookup"
 	  ;message-user-fqdn "foo.com"
+	  ;notmuch-search-line-faces '(("unread" :foreground "cyan")
+	  ;							  ("flagged" :foreground "blue"))
 	  )
 
 (notmuch-address-message-insinuate)
