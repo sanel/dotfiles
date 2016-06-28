@@ -50,7 +50,7 @@
 (set-face-bold-p 'bold nil)
 (set-face-bold-p 'italic nil)
 
-(set-default-font "Monospace-10")
+(set-default-font "inconsolata-13")
 ;(add-to-list 'default-frame-alist '(font . "inconsolata-12"))
 (setq bidi-display-reordering nil)
 
@@ -135,11 +135,30 @@
 ;; tramp
 (setq password-cache-expiry nil)
 
+;; do not use vc on tramp files
+(setq vc-ignore-dir-regexp
+	  (format "\\(%s\\)\\|\\(%s\\)"
+			  vc-ignore-dir-regexp
+			  tramp-file-name-regexp))
+
 ;; ido fuzzy mode
 (setq ido-enable-flex-matching t)
 
 ;; ibuffer
 (setq ibuffer-show-empty-filter-groups nil)
+
+(defun ibuffer-close-all-filter-groups ()
+  "Close displaying status of all filter groups"
+  (interactive)
+  (setq ibuffer-hidden-filter-groups
+		(mapcar #'car (ibuffer-current-filter-groups-with-position)))
+  (ibuffer-update nil t))
+
+;; unique buffers
+(eval-after-load "ibuffer"
+  '(progn
+	 (require 'uniquify)
+	 (setq uniquify-buffer-name-style 'forward)))
 
 ;; evil
 (add-to-list 'load-path "~/.emacs.d")
@@ -313,6 +332,8 @@
 							   '("TODO.org" "auto.org" "notes.org" "movies.org")))
 (setq org-mobile-inbox-for-pull (format "%s/notes.org" org-directory))
 (setq org-mobile-directory (format "%s/mobileorg" org-directory))
+(setq org-refile-targets
+	  '(("TODO.org" :maxlevel . 1)))
 
 ;; org appointments; with this, org-mode scheduled items will be notified 10 minutes
 ;; earlier. To make it work, make sure to run ':ag' or 'org-agenda' so the entries are
@@ -390,7 +411,7 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(ibuffer-saved-filter-groups (quote (("my-filter-group" ("pav-conf" (filename . "pav-conf")) ("pav-api" (filename . "pav-api")) ("uino-scraper" (filename . "uino-scraper")) ("pav-user-api" (filename . "pav-user-api")) ("pav-nlp-playground" (filename . "pav-nlp-playground")) ("pav-profile-timeline-worker" (filename . "pav-profile-timeline-worker")) ("fwd" (filename . "fwd")) ("pav-congress-api-bootstrapper" (filename . "pav-congress-api-bootstrapper")) ("OpenGrok" (filename . "OpenGrok")) ("onyx-starter" (filename . "onyx-starter")) ("onyx-examples" (filename . "onyx-examples")) ("wick" (filename . "wick")) ("drivewatch" (filename . "drivewatch")) ("booster" (filename . "booster")) ("b2c" (filename . "blogger2cryogen")) ("cryogen-html" (filename . "cryogen-html")) ("acidwords" (filename . "acidwords")) ("lein-vaadin" (filename . "lein-vaadin-template")) ("elan" (filename . "elan")) ("if-else" (filename . "if-else")) ("omp" (filename . "omp")) ("ex" (filename . "emailxtractor")) ("ophion" (filename . "ophion")) ("yaims" (filename . "yaims")) ("aries" (filename . "aries")) ("org" (used-mode . org-mode)) ("novate" (filename . "novate"))))))
+ '(ibuffer-saved-filter-groups (quote (("my-filter-groups" ("pav-census-api" (filename . "pav-census-api")) ("pav-nlp" (filename . "pav-nlp")) ("pav-conf" (filename . "pav-conf")) ("pav-api" (filename . "pav-api")) ("uino-scraper" (filename . "uino-scraper")) ("pav-user-api" (filename . "pav-user-api")) ("pav-nlp-playground" (filename . "pav-nlp-playground")) ("pav-profile-timeline-worker" (filename . "pav-profile-timeline-worker")) ("fwd" (filename . "fwd")) ("pav-congress-api-bootstrapper" (filename . "pav-congress-api-bootstrapper")) ("OpenGrok" (filename . "OpenGrok")) ("onyx-starter" (filename . "onyx-starter")) ("onyx-examples" (filename . "onyx-examples")) ("wick" (filename . "wick")) ("drivewatch" (filename . "drivewatch")) ("booster" (filename . "booster")) ("b2c" (filename . "blogger2cryogen")) ("cryogen-html" (filename . "cryogen-html")) ("acidwords" (filename . "acidwords")) ("lein-vaadin" (filename . "lein-vaadin-template")) ("elan" (filename . "elan")) ("if-else" (filename . "if-else")) ("omp" (filename . "omp")) ("ex" (filename . "emailxtractor")) ("ophion" (filename . "ophion")) ("yaims" (filename . "yaims")) ("aries" (filename . "aries")) ("org" (used-mode . org-mode)) ("novate" (filename . "novate"))) ("my-filter-group" ("pav-census-api" (filename . "pav-census-api")) ("pav-nlp" (filename . "pav-nlp")) ("pav-conf" (filename . "pav-conf")) ("pav-api" (filename . "pav-api")) ("uino-scraper" (filename . "uino-scraper")) ("pav-user-api" (filename . "pav-user-api")) ("pav-nlp-playground" (filename . "pav-nlp-playground")) ("pav-profile-timeline-worker" (filename . "pav-profile-timeline-worker")) ("fwd" (filename . "fwd")) ("pav-congress-api-bootstrapper" (filename . "pav-congress-api-bootstrapper")) ("OpenGrok" (filename . "OpenGrok")) ("onyx-starter" (filename . "onyx-starter")) ("onyx-examples" (filename . "onyx-examples")) ("wick" (filename . "wick")) ("drivewatch" (filename . "drivewatch")) ("booster" (filename . "booster")) ("b2c" (filename . "blogger2cryogen")) ("cryogen-html" (filename . "cryogen-html")) ("acidwords" (filename . "acidwords")) ("lein-vaadin" (filename . "lein-vaadin-template")) ("elan" (filename . "elan")) ("if-else" (filename . "if-else")) ("omp" (filename . "omp")) ("ex" (filename . "emailxtractor")) ("ophion" (filename . "ophion")) ("yaims" (filename . "yaims")) ("aries" (filename . "aries")) ("org" (used-mode . org-mode)) ("novate" (filename . "novate"))))))
  '(ibuffer-saved-filters (quote (("gnus" ((or (mode . message-mode) (mode . mail-mode) (mode . gnus-group-mode) (mode . gnus-summary-mode) (mode . gnus-article-mode)))) ("programming" ((or (mode . emacs-lisp-mode) (mode . cperl-mode) (mode . c-mode) (mode . java-mode) (mode . idl-mode) (mode . lisp-mode)))))))
  '(send-mail-function (quote mailclient-send-it)))
 (custom-set-faces
