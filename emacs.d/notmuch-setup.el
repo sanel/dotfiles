@@ -17,8 +17,8 @@
 		(notmuch-search-tag (list "-deleted"))
 	  (notmuch-search-tag (list "+deleted")))))
 
-(defun notmuch-get-date (date) 
-  "Converts a date for notmuch processing" 
+(defun notmuch-get-date (date)
+  "Converts a date for notmuch processing"
   (substring (shell-command-to-string (concat "date --date=\"" date "\" +%s")) 0 -1))
 
 (defun notmuch-today ()
@@ -64,23 +64,29 @@
 ;; epa-mail-verify
 ;; epa-mail-sign/epa-mail-encrypt
 
-;; options 
+;; options
 
 (setq mail-specify-envelope-from t
 	  mail-envelope-from 'header
 	  message-sendmail-envelope-from 'header
-      message-send-mail-function 'message-send-mail-with-sendmail
-      sendmail-program "/usr/bin/msmtp"
-      mm-text-html-renderer 'lynx
+	  message-send-mail-function 'message-send-mail-with-sendmail
+	  sendmail-program "/usr/bin/msmtp"
+	  mm-text-html-renderer 'lynx
 	  notmuch-mua-hidden-headers '()
 	  notmuch-mua-user-agent-function 'notmuch-mua-user-agent-notmuch
 	  notmuch-message-headers '("Subject" "To" "Cc" "Date" "User-Agent")
 	  notmuch-mua-hidden-headers nil
 	  notmuch-crypto-process-mime t
-      notmuch-address-command "~/Maildir/notmuch-addrlookup"
+	  notmuch-address-command "~/Maildir/notmuch-addrlookup"
 	  ;message-user-fqdn "foo.com"
 	  ;notmuch-search-line-faces '(("unread" :foreground "cyan")
 	  ;							  ("flagged" :foreground "blue"))
+
+	  notmuch-always-prompt-for-sender t
+	  ;; when message is signed, ask for appropriate key
+	  mm-sign-option 'guided
+	  ;; disable zip preview
+	  mm-inlined-types (remove "application/zip" mm-inlined-types)
 	  )
 
 (notmuch-address-message-insinuate)
