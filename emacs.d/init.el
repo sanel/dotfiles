@@ -1,5 +1,11 @@
 ;(defvar *emacs-load-start* (current-time))
 
+;; Added by Package.el.  This must come before configurations of
+;; installed packages.  Don't delete this line.  If you don't want it,
+;; just comment it out by adding a semicolon to the start of the line.
+;; You may delete these explanatory comments.
+(package-initialize)
+
 ;; used by rxvt-like terminals; with this env, emacs in terminal
 ;; will correctly know how to use default colors
 (setenv "COLORFGBG" "default;default;0")
@@ -10,6 +16,7 @@
 		("melpa-stable" . "http://melpa-stable.milkbox.net/packages/")
 		("marmalade" . "http://marmalade-repo.org/packages/")))
 
+(add-to-list 'load-path "/usr/share/emacs/site-lisp")
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
 
 ;; basic stuff
@@ -38,11 +45,23 @@
 (set-face-foreground 'font-lock-doc-face "#FFD86A")
 (set-face-foreground 'font-lock-type-face "#EDFF5F")
 
+;; invisible vertical border
+; (set-face-background 'vertical-border "black")
+; (set-face-foreground 'vertical-border (face-background 'vertical-border))
+
+;; vertical border in terminal
+(when (not window-system)
+  (set-face-inverse-video-p 'vertical-border nil)
+  (set-face-background 'vertical-border (face-background 'default))
+  (set-display-table-slot standard-display-table
+						  'vertical-border
+						  (make-glyph-code ?│)))
+
 ;; to keep dark clients
 (setq frame-background-mode 'dark)
 
-; Disable bold/italic fonts slows things a shit. It is done last, so other mode
-; does not set it in the mean time.
+;; Disable bold/italic fonts slows things a shit. It is done last, so other mode
+;; does not set it in the mean time.
 (mapc (lambda (face)
         (set-face-attribute face nil :weight 'normal :underline nil))
       (face-list))
@@ -110,6 +129,9 @@
 
 (menu-bar-mode -1)
 (blink-cursor-mode -1)
+(tool-bar-mode -1)
+(scroll-bar-mode -1)
+(when (fboundp 'global-eldoc-mode) (global-eldoc-mode -1))
 ;; disable blinking in urxvt
 (setq visible-cursor nil)
 (defalias 'yes-or-no-p 'y-or-n-p)
@@ -122,12 +144,22 @@
 ;; no backup and autosave
 (setq backup-inhibited t
       auto-save-default nil
+	  ;; backups
+	  ;backup-by-copying t      ; don't clobber symlinks
+	  ;backup-directory-alist '(("." . "~/.emacs.d/saves"))    ; don't litter my fs tree
+	  ;delete-old-versions t
+	  ;kept-new-versions 6
+	  ;kept-old-versions 2
+	  ;version-control t       ; use versioned backups
       ;; scrolling
       scroll-step 1
       scroll-conservatively 2000)
 
 ;; allow buffer erasing
 (put 'erase-buffer 'disabled nil)
+
+;; disable xml validation
+(setq rng-nxml-auto-validate-flag nil)
 
 ;; vc
 (setq vc-handled-backends '(SVN Git))
@@ -154,14 +186,13 @@
 		(mapcar #'car (ibuffer-current-filter-groups-with-position)))
   (ibuffer-update nil t))
 
-;; unique buffers
-(eval-after-load "ibuffer"
-  '(progn
-	 (require 'uniquify)
-	 (setq uniquify-buffer-name-style 'forward)))
+;; Unique buffers. Can't use lazy load, since it overrides core functions like
+;; rename-buffer or create-file-buffer
+(require 'uniquify)
+(setq uniquify-buffer-name-style 'forward)
 
 ;; evil
-(add-to-list 'load-path "~/.emacs.d")
+(add-to-list 'load-path "~/.emacs.d/lisp")
 (add-to-list 'load-path "~/.emacs.d/modes")
 (add-to-list 'load-path "~/.emacs.d/evil/lib")
 (add-to-list 'load-path "~/.emacs.d/evil")
@@ -180,18 +211,43 @@
 (evil-ex-define-cmd "mks[ession]" 'desktop-save)
 (evil-ex-define-cmd "so[urce]" 'desktop-change-dir)
 (evil-ex-define-cmd "bi[do]" 'ido-switch-buffer)
+(evil-ex-define-cmd "bf[ile]" 'ido-find-file)
+(evil-ex-define-cmd "bmarks" 'bookmark-bmenu-list)
+(evil-ex-define-cmd "bm[ark]" 'bookmark-set)
 
-(autoload 'ack "ack")
+(autoload 'ack "ack" "Runs ack.el." t)
 
 ;; A small adjustment so we autoload etags-select.el only when this
 ;; sequence was pressed. Evil already predefines 'g]' to be set, but only
 ;; after etags-select.el was loaded...
 (define-key evil-motion-state-map "g]" 'etags-select-find-tag-at-point)
-(autoload 'etags-select-find-tag-at-point "etags-select")
+(autoload 'etags-select-find-tag-at-point "etags-select" "Runs etags-select." t)
 
 (add-to-list 'evil-emacs-state-modes 'etags-stack-mode)
-(autoload 'etags-stack-show "etags-stack")
+(autoload 'etags-stack-show "etags-stack" "Runs etags-stack-show." t)
 (evil-ex-define-cmd "tags" 'etags-stack-show)
+
+;; gnu global support
+
+(eval-after-load 'ggtags
+  '(progn
+     (evil-make-overriding-map ggtags-mode-map 'normal)
+     ;; force update evil keymaps after ggtags-mode loaded
+	 (add-hook 'ggtags-mode-hook #'evil-normalize-keymaps)))
+
+(defun evil-jump-to-tag-advice (old-fn &rest args)
+  "Wrapper aroung evil-jump-to-tag with gtags support."
+  (if (bound-and-true-p gtags-mode)
+	  (gtags-find-tag-from-here)
+	(apply old-fn args)))
+(advice-add 'evil-jump-to-tag :around #'evil-jump-to-tag-advice)
+
+(defun evil-pop-tag-stack ()
+  (interactive)
+  (if (bound-and-true-p gtags-mode)
+	  (gtags-pop-stack)
+	(pop-tag-mark)))
+(define-key evil-normal-state-map "\C-t" 'evil-pop-tag-stack)
 
 (add-to-list 'auto-mode-alist '("\\.claws-mail/tmp/tmpmsg\\.0x" . mail-mode))
 ;; on 'a' do not ask me about creating new buffer
@@ -227,31 +283,31 @@
 ;(defun my-clojure-eval-defun ()
 ;  (lisp-eval-defun)
 ;  (process-send-string "*inferior-lisp*" "(use :reload *ns*)"))
-
-(add-hook 'clojure-mode-hook
-  (lambda ()
-    ;(require 'rainbow-delimiters)
-    (global-set-key (kbd "C-c C-c") 'lisp-eval-defun)
-    (global-set-key (kbd "C-c C-k")
-                    (lambda ()
-                      (interactive)
-                      (save-excursion
-                        (mark-whole-buffer)
-                        (lisp-eval-region (region-beginning) (region-end)))))
-    (global-set-key (kbd "C-c C-d")
-                    (lambda (symbol)
-                      (interactive
-                       (list
-                        (let* ((sym (thing-at-point 'symbol))
-                               (sym (if sym (substring-no-properties sym)))
-                               (prompt "Describe")
-                               (prompt (if sym
-                                           (format "%s (default %s): " prompt sym)
-                                         (concat prompt ": "))))
-                          (read-string prompt nil nil sym))))
-                      (process-send-string "*inferior-lisp*"
-                                           (format "(clojure.repl/doc %s)\n" symbol))))
-    (setq inferior-lisp-program "lein repl")))
+;
+;(add-hook 'clojure-mode-hook
+;  (lambda ()
+;    ;(require 'rainbow-delimiters)
+;    (global-set-key (kbd "C-c C-c") 'lisp-eval-defun)
+;    (global-set-key (kbd "C-c C-k")
+;                    (lambda ()
+;                      (interactive)
+;                      (save-excursion
+;                        (mark-whole-buffer)
+;                        (lisp-eval-region (region-beginning) (region-end)))))
+;    (global-set-key (kbd "C-c C-d")
+;                    (lambda (symbol)
+;                      (interactive
+;                       (list
+;                        (let* ((sym (thing-at-point 'symbol))
+;                               (sym (if sym (substring-no-properties sym)))
+;                               (prompt "Describe")
+;                               (prompt (if sym
+;                                           (format "%s (default %s): " prompt sym)
+;                                         (concat prompt ": "))))
+;                          (read-string prompt nil nil sym))))
+;                      (process-send-string "*inferior-lisp*"
+;                                           (format "(clojure.repl/doc %s)\n" symbol))))
+;    (setq inferior-lisp-program "lein repl")))
 
 (autoload 'jam-mode "jam-mode.el"
   "Major more for editing jam files" t)
@@ -313,7 +369,7 @@
 (global-set-key (kbd "<S-next>") 'next-buffer)
 (global-set-key [f9]  'ibuffer)
 (global-set-key [f11] 'neotree-toggle)
-(autoload 'neotree-toggle "neotree")
+(autoload 'neotree-toggle "neotree" "Runs neotree browser." t)
 (global-set-key [f12] 'eshell)
 
 ;; force TAB on Shift-Tab
@@ -324,29 +380,40 @@
     (setq inferior-lisp-program "~/programs/sbcl/run-sbcl.sh")))
 
 ;; org mode
-(setq org-directory "~/cloud/org")
-(setq org-default-notes-file (format "%s/notes.org" org-directory))
-(setq org-agenda-files (list (format "%s/TODO.org" org-directory)))
-(setq org-mobile-files (mapcar (lambda (x)
-								 (concat org-directory "/" x))
-							   '("TODO.org" "auto.org" "notes.org" "movies.org")))
-(setq org-mobile-inbox-for-pull (format "%s/notes.org" org-directory))
-(setq org-mobile-directory (format "%s/mobileorg" org-directory))
-(setq org-refile-targets
-	  '(("TODO.org" :maxlevel . 1)))
+(setq org-directory "~/cloud/org"
+	  org-default-notes-file (format "%s/notes.org" org-directory)
+	  org-agenda-files (list (format "%s/TODO.org" org-directory))
+	  org-mobile-files (mapcar
+						(lambda (x)
+						  (concat org-directory "/" x))
+						'("TODO.org" "auto.org" "notes.org" "movies.org"))
+	  org-mobile-inbox-for-pull (format "%s/notes.org" org-directory)
+	  org-mobile-directory (format "%s/mobileorg" org-directory)
+	  org-refile-targets '(("TODO.org" :maxlevel . 1))
+	  ;; in clock summary, only put total hours
+	  org-time-clocksum-format "%d:%02d"
+	  ;; don't show done tasks in agenda
+	  org-agenda-skip-scheduled-if-done t
+	  ;; include commands from emacs calendar, also allow showing holidays in agenda view
+	  org-agenda-include-diary t)
 
 ;; org appointments; with this, org-mode scheduled items will be notified 10 minutes
 ;; earlier. To make it work, make sure to run ':ag' or 'org-agenda' so the entries are
 ;; populated inside 'appt-time-msg-list'.
 ;;
 ;; To see current entries, print 'appt-time-msg-list'.
-(setq appt-message-warning-time 10 ;; warn 10 min in advance
-	  appt-display-mode-line t     ;; show in the modeline
-	  appt-display-format 'window) ;; use our func
-(appt-activate 1)              ;; active appt (appointment notification)
+(add-hook 'org-finalize-agenda-hook
+  (lambda ()
+	(setq appt-message-warning-time 10 ;; warn 10 min in advance
+		  appt-display-diary nil       ;; do not display diary when (appt-activate) is called
+		  appt-display-mode-line t     ;; show in the modeline
+		  appt-display-format 'window  ;; use our func
+		  calendar-mark-diary-entries-flag t) ;; mark diary entries in calendar
+	(org-agenda-to-appt)
+	(appt-activate 1)))                ;; active appt (appointment notification)
 
  ;; update appt each time agenda opened
-(add-hook 'org-finalize-agenda-hook 'org-agenda-to-appt)
+;(add-hook 'org-finalize-agenda-hook 'org-agenda-to-appt)
 
 ;; org html export style
 (setq org-export-html-style-include-scripts nil
@@ -366,13 +433,27 @@
           org-icalendar-include-bbdb-anniversaries t
           org-icalendar-store-UID t)))
 
+;; for display-time-world; uses default values plus some new
+(setq display-time-world-list
+	  '(("UTC" "UTC")
+		("America/Los_Angeles" "Seattle")
+		("America/New_York" "New York")
+		("Australia/Melbourne" "Melbourne")
+		("Australia/Darwin" "Darwin")
+		("Europe/London" "London")
+		("Europe/Paris" "Paris")
+		("Asia/Calcutta" "Bangalore")
+		("Asia/Tokyo" "Tokyo")))
+
 ;; for browse-url
-(setq browse-url-browser-function 'browse-url-generic
-      browse-url-generic-program "firefox")
+(setq browse-url-browser-function 'browse-url-chromium
+      ;browse-url-browser-function 'browse-url-generic
+      ;browse-url-generic-program "firefox"
+      )
 
 ;; something I can quickly call from eshell
 (defun E (&rest args)
-  "Invoke `find-file' on the file. \"vi +42 foo\" also goes to line 42 in the buffer."
+  "Invoke `find-file' on the file. \"E +42 foo\" also goes to line 42 in the buffer."
   (while args
     (if (string-match "\\`\\+\\([0-9]+\\)\\'" (car args))
         (let* ((line (string-to-number (match-string 1 (pop args))))
@@ -393,10 +474,31 @@
   (interactive)
   (set-buffer-file-coding-system 'unix 't) )
 
-;;; load the rest
-(load-file "~/.emacs.d/rss-setup.el")
-(load-file "~/.emacs.d/notmuch-setup.el")
-(load-file "~/programs/projects/monroe/monroe.el")
+(defun eww-more-readable ()
+  "Make eww more pleasent to use. Assumes run after eww is loaded."
+  (interactive)
+  (setq eww-header-line-format nil)
+  (toggle-mode-line)
+  (set-window-margins (get-buffer-window) 20 20)
+  (eww-reload 'local))
+
+;; maven error support
+
+;(add-to-list 'compilation-error-regexp-alist
+;             'maven)
+;
+;(add-to-list
+; 'compilation-error-regexp-alist-alist
+; '(maven
+;   "\\[ERROR\\] \\(.+?\\):\\[\\([0-9]+\\),\\([0-9]+\\)\\].\*" 1 2 3))
+
+;;;; load the rest
+;;(load-file "~/.emacs.d/lisp/rss-setup.el")
+(load-file "~/.emacs.d/lisp/elfeed-setup.el")
+(load-file "~/.emacs.d/lisp/notmuch-setup.el")
+(load-file "~/.emacs.d/lisp/org-setup.el")
+
+(autoload 'clojure-enable-monroe "~/programs/projects/monroe/monroe.el" "Starts monroe." t)
 (add-hook 'clojure-mode-hook 'clojure-enable-monroe)
 
 ;(message ".emacs loaded in %ds"
@@ -411,13 +513,142 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(ibuffer-saved-filter-groups (quote (("my-filter-groups" ("pav-census-api" (filename . "pav-census-api")) ("pav-nlp" (filename . "pav-nlp")) ("pav-conf" (filename . "pav-conf")) ("pav-api" (filename . "pav-api")) ("uino-scraper" (filename . "uino-scraper")) ("pav-user-api" (filename . "pav-user-api")) ("pav-nlp-playground" (filename . "pav-nlp-playground")) ("pav-profile-timeline-worker" (filename . "pav-profile-timeline-worker")) ("fwd" (filename . "fwd")) ("pav-congress-api-bootstrapper" (filename . "pav-congress-api-bootstrapper")) ("OpenGrok" (filename . "OpenGrok")) ("onyx-starter" (filename . "onyx-starter")) ("onyx-examples" (filename . "onyx-examples")) ("wick" (filename . "wick")) ("drivewatch" (filename . "drivewatch")) ("booster" (filename . "booster")) ("b2c" (filename . "blogger2cryogen")) ("cryogen-html" (filename . "cryogen-html")) ("acidwords" (filename . "acidwords")) ("lein-vaadin" (filename . "lein-vaadin-template")) ("elan" (filename . "elan")) ("if-else" (filename . "if-else")) ("omp" (filename . "omp")) ("ex" (filename . "emailxtractor")) ("ophion" (filename . "ophion")) ("yaims" (filename . "yaims")) ("aries" (filename . "aries")) ("org" (used-mode . org-mode)) ("novate" (filename . "novate"))) ("my-filter-group" ("pav-census-api" (filename . "pav-census-api")) ("pav-nlp" (filename . "pav-nlp")) ("pav-conf" (filename . "pav-conf")) ("pav-api" (filename . "pav-api")) ("uino-scraper" (filename . "uino-scraper")) ("pav-user-api" (filename . "pav-user-api")) ("pav-nlp-playground" (filename . "pav-nlp-playground")) ("pav-profile-timeline-worker" (filename . "pav-profile-timeline-worker")) ("fwd" (filename . "fwd")) ("pav-congress-api-bootstrapper" (filename . "pav-congress-api-bootstrapper")) ("OpenGrok" (filename . "OpenGrok")) ("onyx-starter" (filename . "onyx-starter")) ("onyx-examples" (filename . "onyx-examples")) ("wick" (filename . "wick")) ("drivewatch" (filename . "drivewatch")) ("booster" (filename . "booster")) ("b2c" (filename . "blogger2cryogen")) ("cryogen-html" (filename . "cryogen-html")) ("acidwords" (filename . "acidwords")) ("lein-vaadin" (filename . "lein-vaadin-template")) ("elan" (filename . "elan")) ("if-else" (filename . "if-else")) ("omp" (filename . "omp")) ("ex" (filename . "emailxtractor")) ("ophion" (filename . "ophion")) ("yaims" (filename . "yaims")) ("aries" (filename . "aries")) ("org" (used-mode . org-mode)) ("novate" (filename . "novate"))))))
- '(ibuffer-saved-filters (quote (("gnus" ((or (mode . message-mode) (mode . mail-mode) (mode . gnus-group-mode) (mode . gnus-summary-mode) (mode . gnus-article-mode)))) ("programming" ((or (mode . emacs-lisp-mode) (mode . cperl-mode) (mode . c-mode) (mode . java-mode) (mode . idl-mode) (mode . lisp-mode)))))))
+ '(ibuffer-saved-filter-groups
+   (quote
+	(("my-groups"
+	  ("erc"
+	   (used-mode . erc-mode))
+	  ("adpa"
+	   (filename . "accrue\\/adpa"))
+	  ("accrue"
+	   (filename . "accrue"))
+	  ("quieromipedido"
+	   (filename . "quieromipedido"))
+	  ("kwelia"
+	   (filename . "kwelia"))
+	  ("ra-scraper"
+	   (filename . "ra-scraper"))
+	  ("heroku-buildpack-openresty"
+	   (filename . "heroku-buildpack-openresty"))
+	  ("lore"
+	   (filename . "lore"))
+	  ("nxd2"
+	   (filename . "nxd2"))
+	  ("nxd"
+	   (filename . "nxd"))
+	  ("quandl-wikipedia"
+	   (filename . "quandl-wikipedia"))
+	  ("mails"
+	   (used-mode . notmuch-message-mode))
+	  ("stoys"
+	   (filename . "stoys"))
+	  ("duna"
+	   (filename . "duna"))
+	  ("z2o"
+	   (filename . "z2o"))
+	  ("pgnotify-demo"
+	   (filename . "pgnotify-demo"))
+	  ("flyerbee.com"
+	   (filename . "flyerbee.com"))
+	  ("dextrz.com"
+	   (filename . "dextrz.com"))
+	  ("nuvomeds"
+	   (filename . "nuvomeds"))
+	  ("grs"
+	   (filename . "grs"))
+	  ("ip-ranger"
+	   (filename . "ip-ranger"))
+	  ("joss"
+	   (filename . "joss"))
+	  ("gtrends-scraper"
+	   (filename . "gtrends-scraper"))
+	  ("mw"
+	   (filename . "mw"))
+	  ("rssget"
+	   (filename . "rssget"))
+	  ("pav-census-api"
+	   (filename . "pav-census-api"))
+	  ("pav-nlp"
+	   (filename . "pav-nlp"))
+	  ("pav-conf"
+	   (filename . "pav-conf"))
+	  ("pav-api"
+	   (filename . "pav-api"))
+	  ("uino-scraper"
+	   (filename . "uino-scraper"))
+	  ("pav-user-api"
+	   (filename . "pav-user-api"))
+	  ("pav-nlp-playground"
+	   (filename . "pav-nlp-playground"))
+	  ("pav-profile-timeline-worker"
+	   (filename . "pav-profile-timeline-worker"))
+	  ("fwd"
+	   (filename . "fwd"))
+	  ("pav-congress-api-bootstrapper"
+	   (filename . "pav-congress-api-bootstrapper"))
+	  ("OpenGrok"
+	   (filename . "OpenGrok"))
+	  ("onyx-starter"
+	   (filename . "onyx-starter"))
+	  ("onyx-examples"
+	   (filename . "onyx-examples"))
+	  ("wick"
+	   (filename . "wick"))
+	  ("drivewatch"
+	   (filename . "drivewatch"))
+	  ("booster"
+	   (filename . "booster"))
+	  ("b2c"
+	   (filename . "blogger2cryogen"))
+	  ("cryogen-html"
+	   (filename . "cryogen-html"))
+	  ("acidwords"
+	   (filename . "acidwords"))
+	  ("lein-vaadin"
+	   (filename . "lein-vaadin-template"))
+	  ("elan"
+	   (filename . "elan"))
+	  ("if-else"
+	   (filename . "if-else"))
+	  ("omp"
+	   (filename . "omp"))
+	  ("ex"
+	   (filename . "emailxtractor"))
+	  ("ophion"
+	   (filename . "ophion"))
+	  ("yaims"
+	   (filename . "yaims"))
+	  ("aries"
+	   (filename . "aries"))
+	  ("org"
+	   (used-mode . org-mode))
+	  ("novate"
+	   (filename . "novate"))))))
+ '(ibuffer-saved-filters
+   (quote
+	(("gnus"
+	  ((or
+		(mode . message-mode)
+		(mode . mail-mode)
+		(mode . gnus-group-mode)
+		(mode . gnus-summary-mode)
+		(mode . gnus-article-mode))))
+	 ("programming"
+	  ((or
+		(mode . emacs-lisp-mode)
+		(mode . cperl-mode)
+		(mode . c-mode)
+		(mode . java-mode)
+		(mode . idl-mode)
+		(mode . lisp-mode)))))))
+ '(package-selected-packages
+   (quote
+	(log4j-mode vlf yaml-mode request-deferred php-mode magit lua-mode ledger-mode jabber f dash-functional)))
+ '(safe-local-variable-values (quote ((create-lockfiles))))
  '(send-mail-function (quote mailclient-send-it)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(newsticker-treeview-old-face ((t (:inherit nil))))
  '(org-agenda-date ((t (:inherit org-agenda-structure))) t))
