@@ -68,10 +68,9 @@
 
 (set-face-bold-p 'bold nil)
 (set-face-bold-p 'italic nil)
+(setq bidi-display-reordering nil)
 
 (set-default-font "inconsolata-13")
-;(add-to-list 'default-frame-alist '(font . "inconsolata-12"))
-(setq bidi-display-reordering nil)
 
 ;; speeds up things considerably
 (setq font-lock-maximum-decoration
@@ -214,6 +213,9 @@
 (evil-ex-define-cmd "bf[ile]" 'ido-find-file)
 (evil-ex-define-cmd "bmarks" 'bookmark-bmenu-list)
 (evil-ex-define-cmd "bm[ark]" 'bookmark-set)
+
+;; vi-like tab
+;; (define-key evil-insert-state-map (kbd "TAB") 'tab-to-tab-stop)
 
 (autoload 'ack "ack" "Runs ack.el." t)
 
@@ -390,6 +392,8 @@
 	  org-mobile-inbox-for-pull (format "%s/notes.org" org-directory)
 	  org-mobile-directory (format "%s/mobileorg" org-directory)
 	  org-refile-targets '(("TODO.org" :maxlevel . 1))
+	  ;; allow paths-like access, so we can select root nodes if necessary
+	  org-refile-use-outline-path 'file
 	  ;; in clock summary, only put total hours
 	  org-time-clocksum-format "%d:%02d"
 	  ;; don't show done tasks in agenda
@@ -477,10 +481,38 @@
 (defun eww-more-readable ()
   "Make eww more pleasent to use. Assumes run after eww is loaded."
   (interactive)
-  (setq eww-header-line-format nil)
-  (toggle-mode-line)
+  (setq eww-header-line-format nil
+		mode-line-format nil)
   (set-window-margins (get-buffer-window) 20 20)
   (eww-reload 'local))
+
+(defun my-ido-find-tag ()
+  "Find a tag using ido"
+  (interactive)
+  (tags-completion-table)
+  (let (tag-names)
+    (mapc (lambda (x)
+            (unless (integerp x)
+              (push (prin1-to-string x t) tag-names)))
+          tags-completion-table)
+    (find-tag (ido-completing-read "Tag: " tag-names))))
+
+(defun close-all-parentheses ()
+  (interactive "*")
+  (let ((closing nil))
+    (save-excursion
+      (while (condition-case nil
+         (progn
+           (backward-up-list)
+           (let ((syntax (syntax-after (point))))
+             (case (car syntax)
+               ((4) (setq closing (cons (cdr syntax) closing)))
+               ((7 8) (setq closing (cons (char-after (point)) closing)))))
+           t)
+           ((scan-error) nil))))
+    (apply #'insert (nreverse closing))))
+
+(global-set-key (kbd "C-c ]") 'close-all-parentheses)
 
 ;; maven error support
 
@@ -516,6 +548,18 @@
  '(ibuffer-saved-filter-groups
    (quote
 	(("my-groups"
+	  ("octal"
+	   (filename . "octal"))
+	  ("accrue/EventHandler"
+	   (filename . "accrue/EventHandler"))
+	  ("business-sci/poseidon"
+	   (filename . "business-sci/poseidon"))
+	  ("gmail-watch"
+	   (filename . "gmail-watch"))
+	  ("verser"
+	   (filename . "verser"))
+	  ("air-monitoring"
+	   (filename . "air-monitoring"))
 	  ("erc"
 	   (used-mode . erc-mode))
 	  ("adpa"
@@ -651,4 +695,6 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(elfeed-search-title-face ((t (:foreground "gray"))))
+ '(notmuch-search-unread-face ((t nil)))
  '(org-agenda-date ((t (:inherit org-agenda-structure))) t))

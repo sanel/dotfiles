@@ -7,18 +7,29 @@
 	(interactive)
 	(if (member "deleted" (notmuch-show-get-tags))
 		(notmuch-show-tag (list "-deleted"))
-	  (notmuch-show-tag (list "+deleted")))))
+	  (notmuch-show-tag (list "+deleted")))
+	(notmuch-search-next-thread)))
 
 (define-key notmuch-search-mode-map "d"
-  (lambda ()
+  (lambda (&optional beg end)
 	"toggle deleted tag for message"
-	(interactive)
+	(interactive (notmuch-search-interactive-region))
 	(if (member "deleted" (notmuch-search-get-tags))
-		(notmuch-search-tag (list "-deleted"))
-	  (notmuch-search-tag (list "+deleted")))))
+		(notmuch-search-tag (list "-deleted") beg end)
+	  (notmuch-search-tag (list "+deleted") beg end))
+	(notmuch-search-next-thread)))
 
-(defun notmuch-get-date (date)
-  "Converts a date for notmuch processing"
+(define-key notmuch-search-mode-map "e"
+  (lambda (&optional beg end)
+	"toggle unread tag for message"
+	(interactive (notmuch-search-interactive-region))
+	(if (not (member "unread" (notmuch-search-get-tags)))
+		(notmuch-search-tag (list "+unread") beg end)
+	  (notmuch-search-tag (list "-unread") beg end))
+	(notmuch-search-next-thread)))
+
+(defun notmuch-get-date (date) 
+  "Converts a date for notmuch processing" 
   (substring (shell-command-to-string (concat "date --date=\"" date "\" +%s")) 0 -1))
 
 (defun notmuch-today ()
@@ -64,29 +75,35 @@
 ;; epa-mail-verify
 ;; epa-mail-sign/epa-mail-encrypt
 
-;; options
+;; options 
 
 (setq mail-specify-envelope-from t
 	  mail-envelope-from 'header
+	  mail-host-address "example.com"
 	  message-sendmail-envelope-from 'header
-	  message-send-mail-function 'message-send-mail-with-sendmail
-	  sendmail-program "/usr/bin/msmtp"
-	  mm-text-html-renderer 'lynx
+      message-send-mail-function 'message-send-mail-with-sendmail
+	  message-kill-buffer-on-exit t
+      sendmail-program "/usr/bin/msmtp"
+      mm-text-html-renderer 'lynx
 	  notmuch-mua-hidden-headers '()
 	  notmuch-mua-user-agent-function 'notmuch-mua-user-agent-notmuch
 	  notmuch-message-headers '("Subject" "To" "Cc" "Date" "User-Agent")
 	  notmuch-mua-hidden-headers nil
 	  notmuch-crypto-process-mime t
-	  notmuch-address-command "~/Maildir/notmuch-addrlookup"
-	  ;message-user-fqdn "foo.com"
-	  ;notmuch-search-line-faces '(("unread" :foreground "cyan")
-	  ;							  ("flagged" :foreground "blue"))
-
+      notmuch-address-command "~/Maildir/notmuch-addrlookup"
 	  notmuch-always-prompt-for-sender t
 	  ;; when message is signed, ask for appropriate key
 	  mm-sign-option 'guided
 	  ;; disable zip preview
 	  mm-inlined-types (remove "application/zip" mm-inlined-types)
+	  ;message-user-fqdn "foo.com"
+	  ;notmuch-search-line-faces '(("unread" :foreground "cyan")
+	  ;							  ("flagged" :foreground "blue"))
 	  )
 
 (notmuch-address-message-insinuate)
+
+;; gnus alias
+
+(autoload 'gnus-alias-determine-identity "gnus-alias" "" t)
+(add-hook 'message-setup-hook 'gnus-alias-determine-identity)
